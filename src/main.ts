@@ -1,19 +1,9 @@
-import { Cause, Effect, Exit } from 'effect'
+import { Layer, pipe } from 'effect'
 
-class HttpError {
-  readonly _tag = 'HttpError'
-}
+import { NodeRuntime } from '@effect/platform-node'
+import * as DiscordClient from './services/discord/client'
+import { Registry } from './services/discord/registry'
+import { PingCommand } from './services/commands/ping'
 
-const program = Effect.gen(function* () {
-  const text = yield* Effect.succeed('Hello, world!')
-  const length = yield* Effect.succeed(text.length)
-  yield* Effect.fail(new HttpError())
-
-  yield* Effect.log(text, `The length of the text is: ${length}`, Cause.die('hi'))
-
-  return length
-})
-
-const x = Effect.runSync(program)
-
-console.log(x)
+const layers = Layer.mergeAll(DiscordClient.fromEnv, PingCommand.Default).pipe(Layer.provide(Registry.Default))
+pipe(Layer.launch(layers), NodeRuntime.runMain)
