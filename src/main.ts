@@ -1,15 +1,19 @@
-import { client } from "./bot.ts";
-import { env } from "@/lib/env.ts";
+import { Cause, Effect, Exit } from 'effect'
 
-import { scheduler } from "./lib/scheduler.ts";
-import { app } from "./web/router.ts";
+class HttpError {
+  readonly _tag = 'HttpError'
+}
 
-//Web server
-Deno.serve(app.fetch);
+const program = Effect.gen(function* () {
+  const text = yield* Effect.succeed('Hello, world!')
+  const length = yield* Effect.succeed(text.length)
+  yield* Effect.fail(new HttpError())
 
-//scheduler
-Deno.cron("scheduler-schedule-tasks", "0 0 * * *", scheduler.scheduleDucks);
-Deno.cron("scheduler-handle-tasks", "* * * * *", scheduler.handleTasks);
+  yield* Effect.log(text, `The length of the text is: ${length}`, Cause.die('hi'))
 
-//Bot
-client.login(env.TOKEN);
+  return length
+})
+
+const x = Effect.runSync(program)
+
+console.log(x)
