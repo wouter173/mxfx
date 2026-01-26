@@ -1,10 +1,10 @@
-import { Effect, Layer, pipe, Config } from 'effect'
+import { Effect, Config } from 'effect'
 
 import { NodeRuntime } from '@effect/platform-node'
 import { NodeHttpClient } from '@effect/platform-node'
 import { HttpClient } from '@effect/platform'
-import { MatrixApi } from './lib/mxfx/api/matrix-api'
-import { MatrixConfig } from './lib/mxfx'
+import { MatrixConfig } from 'mxfx'
+import { MatrixApi } from 'mxfx/api'
 
 const program = Effect.gen(function* () {
   const matrixUserName = yield* Config.string('MATRIX_USER_NAME')

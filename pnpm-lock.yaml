@@ -20,6 +20,9 @@ importers:
       effect:
         specifier: ^3.19.0
         version: 3.19.3
+      mxfx:
+        specifier: workspace:*
+        version: link:packages/mxfx
     devDependencies:
       '@effect/vitest':
         specifier: ^0.27.0
@@ -33,6 +36,25 @@ importers:
       tsx:
         specifier: ^4.19.4
         version: 4.20.6
+      typescript:
+        specifier: ^5.8.3
+        version: 5.9.3
+
+  packages/mxfx:
+    dependencies:
+      '@effect/platform':
+        specifier: ^0.93.0
+        version: 0.93.0(effect@3.19.3)
+      effect:
+        specifier: ^3.19.0
+        version: 3.19.3
+    devDependencies:
+      '@effect/vitest':
+        specifier: ^0.27.0
+        version: 0.27.0(effect@3.19.3)(vitest@3.2.4(@types/node@24.10.0)(lightningcss@1.30.2)(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1))
+      dotenv-cli:
+        specifier: ^11.0.0
+        version: 11.0.0
       typescript:
         specifier: ^5.8.3
         version: 5.9.3
@@ -3026,6 +3048,7 @@ packages:
   tar@7.5.2:
     resolution: {integrity: sha512-7NyxrTE4Anh8km8iEy7o0QYPs+0JKBTj5ZaqHg6B39erLg0qYXN3BijtShwbsNSvQ+LN75+KV+C4QR/f6Gwnpg==}
     engines: {node: '>=18'}
+    deprecated: Old versions of tar are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exhorbitant rates) by contacting i@izs.me
 
   temp-dir@2.0.0:
     resolution: {integrity: sha512-aoBAniQmmwtcKp/7BzsH8Cxzv8OL736p7v1ihGb5e9DJ9kTwGWHrQrVB5+lfVDzfGrdRzXch+ig7LHaY1JTOrg==}

@@ -16,7 +16,8 @@
     "@effect/platform": "^0.93.0",
     "@effect/platform-node": "^0.100.0",
     "@types/node": "^24.10.0",
-    "effect": "^3.19.0"
+    "effect": "^3.19.0",
+    "mxfx": "workspace:*"
   },
   "devDependencies": {
     "@effect/vitest": "^0.27.0",
