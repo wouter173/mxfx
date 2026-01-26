@@ -48,6 +48,9 @@ importers:
       effect:
         specifier: ^3.19.0
         version: 3.19.3
+      expo-secure-store:
+        specifier: ^15.0.7
+        version: 15.0.7(expo@54.0.23(@babel/core@7.28.5)(react-native@0.82.1(@babel/core@7.28.5)(react@19.2.0))(react@19.2.0))
     devDependencies:
       '@effect/vitest':
         specifier: ^0.27.0
