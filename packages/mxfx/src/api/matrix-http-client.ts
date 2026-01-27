@@ -3,22 +3,24 @@ import { Effect, Either, Schema } from 'effect'
 import { MatrixClientSessionStore } from '../client/matrix-client-session-store'
 import { ApiHttpError } from './error'
 import { MatrixApiErrorContentSchema } from './schema/error'
+import { MatrixConfig } from '../config/matrix-config'
 
 export class MatrixHttpClient extends Effect.Service<MatrixHttpClient>()('mxfx/MatrixHttpClient', {
   effect: Effect.gen(function* () {
     const httpClient = yield* HttpClient.HttpClient
     const sessionStore = yield* MatrixClientSessionStore
+    const matrixConfig = yield* MatrixConfig
 
     const matrixHttpClient = httpClient.pipe(
-      HttpClient.tapRequest((req) =>
+      HttpClient.tapRequest(req =>
         Effect.logDebug(`Matrix API Request: ${req.method} ${Either.getOrNull(UrlParams.makeUrl(req.url, req.urlParams, req.hash))}`),
       ),
       HttpClient.filterOrElse(
-        (res) => res.status >= 200 && res.status < 400,
-        (res) =>
+        res => res.status >= 200 && res.status < 400,
+        res =>
           res.text
             .pipe(
-              Effect.flatMap((text) =>
+              Effect.flatMap(text =>
                 Effect.gen(function* () {
                   const content = Schema.decodeUnknownEither(Schema.parseJson(MatrixApiErrorContentSchema))(text)
                   if (Either.isLeft(content)) {
@@ -29,7 +31,7 @@ export class MatrixHttpClient extends Effect.Service<MatrixHttpClient>()('mxfx/M
                 }),
               ),
               Effect.map(
-                (content) =>
+                content =>
                   new ApiHttpError({
                     method: res.request.method,
                     url: res.request.url,
@@ -50,9 +52,8 @@ export class MatrixHttpClient extends Effect.Service<MatrixHttpClient>()('mxfx/M
 
     const setMatrixBaseUrl = (req: HttpClientRequest.HttpClientRequest) =>
       Effect.gen(function* () {
-        const session = yield* sessionStore.get()
-        yield* Effect.logDebug(`Using Matrix base URL: ${session?.baseUrl}`)
-        return req.pipe(HttpClientRequest.prependUrl(`${session?.baseUrl ?? ''}/_matrix/client`))
+        yield* Effect.logDebug(`Using Matrix base URL: ${matrixConfig.baseUrl}`)
+        return req.pipe(HttpClientRequest.prependUrl(`${matrixConfig.baseUrl ?? ''}/_matrix/client`))
       })
 
     const setAuthToken = (req: HttpClientRequest.HttpClientRequest) =>
@@ -62,7 +63,7 @@ export class MatrixHttpClient extends Effect.Service<MatrixHttpClient>()('mxfx/M
         return req.pipe(HttpClientRequest.bearerToken(session?.credentials.token ?? ''))
       })
 
-    return { client: matrixHttpClient, setMatrixBaseUrl, setAuthToken }
+    return { client: matrixHttpClient.pipe(HttpClient.mapRequestEffect(setMatrixBaseUrl)), setAuthToken }
   }),
   dependencies: [MatrixClientSessionStore.Default],
 }) {}

@@ -107,14 +107,6 @@ export const VersionsResponseSchema = Schema.Struct({
   versions: Schema.Array(Schema.String),
 })
 
-export const LoginFlowsV3ResponseSchema = Schema.Struct({
-  flows: Schema.Array(
-    Schema.Struct({
-      type: Schema.String,
-    }),
-  ),
-})
-
 export const LoginV3ResponseSchema = Schema.Struct({
   access_token: Schema.String,
   device_id: Schema.String,

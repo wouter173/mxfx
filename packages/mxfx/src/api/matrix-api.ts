@@ -5,7 +5,6 @@ import type { RoomIdType, UserIdType } from '../branded'
 import { MatrixHttpClient } from './matrix-http-client'
 import {
   AccountWhoamiV3ResponseSchema,
-  LoginFlowsV3ResponseSchema,
   LoginV3ResponseSchema,
   ProfileV3ResponseSchema,
   RefreshV3ResponseSchema,
@@ -20,7 +19,7 @@ export class MatrixApi extends Effect.Service<MatrixApi>()('mxfx/MatrixApi', {
     // const { client: matrixHttpClient, setMatrixBaseUrl, setAuthToken } = matrixHttp
 
     return {
-      request: <A>(request: Effect.Effect<A>) => request.pipe(Effect.provide(MatrixHttpClient.Default)),
+      request: <A, E, R>(request: Effect.Effect<A, E, R>) => request.pipe(Effect.provide(MatrixHttpClient.Default)),
     }
 
     // return {
