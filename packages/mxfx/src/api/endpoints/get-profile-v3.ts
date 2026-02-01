@@ -2,7 +2,7 @@ import { Schema } from 'effect'
 import { makeEndpoint } from '../matrix-endpoint'
 import { MxcUriSchema } from '../../branded'
 
-export const GetProfileV3ResponseSchema = Schema.Struct({
+const responseSchema = Schema.Struct({
   avatarUrl: Schema.optional(MxcUriSchema).pipe(Schema.fromKey('avatar_url')),
   displayname: Schema.optional(Schema.String),
   //TODO: Make versioned fields
@@ -24,5 +24,5 @@ export const getProfileV3 = ({ userId }: { userId: string }) =>
     path: `/v3/profile/${encodeURIComponent(userId)}`,
     method: 'GET',
     auth: true,
-    schema: GetProfileV3ResponseSchema,
+    schema: responseSchema,
   })

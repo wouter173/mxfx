@@ -1,7 +1,7 @@
 import { Schema } from 'effect'
 import { makeEndpoint } from '../matrix-endpoint'
 
-export const LoginFlowsV3ResponseSchema = Schema.Struct({
+const responseSchema = Schema.Struct({
   flows: Schema.Array(Schema.Struct({ type: Schema.String })),
 })
 
@@ -19,5 +19,5 @@ export const getLoginV3 = () =>
     path: '/v3/login',
     method: 'GET',
     auth: false,
-    schema: LoginFlowsV3ResponseSchema,
+    schema: responseSchema,
   })

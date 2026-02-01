@@ -7,7 +7,8 @@
   "scripts": {
     "dev": "dotenv -- tsx --watch ./src/main.ts",
     "build": "tsc",
-    "start": "node ./src/main.js"
+    "start": "node ./src/main.js",
+    "test": "vitest"
   },
   "keywords": [],
   "author": "",
@@ -20,7 +21,7 @@
     "mxfx": "workspace:*"
   },
   "devDependencies": {
-    "prettier-plugin-jsdoc":"^1.8.0",
+    "prettier-plugin-jsdoc": "^1.8.0",
     "prettier": "^3.8.1",
     "@effect/vitest": "^0.27.0",
     "dotenv-cli": "^11.0.0",

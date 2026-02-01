@@ -4,7 +4,7 @@ import { NodeRuntime } from '@effect/platform-node'
 import { NodeHttpClient } from '@effect/platform-node'
 import { MatrixConfig } from 'mxfx'
 import { InMemoryVault, Vault } from 'mxfx/vault'
-import { getProfileV3, postLoginV3 } from 'mxfx/api/endpoints'
+import { getProfileV3, postLoginV3, postUserDirectorySearchV3 } from 'mxfx/api/endpoints'
 import { ApiHttpClient, AuthHttpClient, BaseHttpClient } from 'mxfx/api/http-client'
 import { MatrixApi } from 'mxfx/api'
 
@@ -30,6 +30,8 @@ const program = Effect.gen(function* () {
   yield* vault.setItem('accessToken', accessToken)
   const y = yield* matrixApi.execute(getProfileV3({ userId }))
   yield* Effect.log(`Logged in as user ID: ${userId} with profile: ${JSON.stringify(y)}`)
+
+  // const users = yield* matrixApi.execute(postUserDirectorySearchV3({ searchTerm: 'wo', limit: 100 }))
 })
 
 NodeRuntime.runMain(

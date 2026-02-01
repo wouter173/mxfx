@@ -1,6 +1,6 @@
 import { describe, expect, it } from '@effect/vitest'
 import { Effect, Schema } from 'effect'
-import { ClientEventSchema, RoomMessageEventPartialSchema } from './common'
+import { ClientEventSchema, nullable, RoomMessageEventPartialSchema } from './common'
 
 const decode = Schema.decode(
   Schema.Struct({
@@ -44,6 +44,35 @@ describe('event', () => {
         type: 'm.room.message',
         unsigned: { age: 1234, membership: 'join' },
       })
+    }),
+  )
+})
+
+describe('nullable helper', () => {
+  it.effect('should en- and decode nullable schema', () =>
+    Effect.gen(function* () {
+      const NullableStringSchema = nullable(Schema.String)
+
+      expect(yield* Schema.decode(NullableStringSchema)(null)).toBeUndefined()
+      expect(yield* Schema.decode(NullableStringSchema)('hello')).toBe('hello')
+
+      expect(yield* Schema.encode(NullableStringSchema)(undefined)).toBeUndefined()
+      expect(yield* Schema.encode(NullableStringSchema)('hello')).toBe('hello')
+    }),
+  )
+
+  it.effect('should en- and decode nullable optional schema', () =>
+    Effect.gen(function* () {
+      const NullableOptionalStringSchema = Schema.Struct({
+        value: Schema.optional(nullable(Schema.String)),
+      })
+
+      expect(yield* Schema.decode(NullableOptionalStringSchema)({ value: null })).toStrictEqual({ value: undefined })
+      expect(yield* Schema.decode(NullableOptionalStringSchema)({ value: 'hello' })).toStrictEqual({ value: 'hello' })
+      expect(yield* Schema.decode(NullableOptionalStringSchema)({})).toStrictEqual({})
+
+      expect(yield* Schema.encode(NullableOptionalStringSchema)({ value: undefined })).toStrictEqual({ value: undefined })
+      expect(yield* Schema.encode(NullableOptionalStringSchema)({})).toStrictEqual({})
     }),
   )
 })
