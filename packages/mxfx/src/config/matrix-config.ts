@@ -1,5 +1,7 @@
-import { HttpClient, HttpClientResponse } from '@effect/platform'
-import { Config, Effect, Layer, Schema } from 'effect'
+import { Config, Effect, Layer } from 'effect'
+import { getDiscoveryInformation } from '../api/endpoints/get-discovery-information'
+import { BaseHttpClient } from '../api/http-client'
+import { makeHttpRequest, parseHttpResponse } from '../api/matrix-endpoint'
 
 type MatrixConfigService = {
   serverName: string
@@ -8,22 +10,18 @@ type MatrixConfigService = {
 
 export class MatrixConfig extends Effect.Tag('mxfx/MatrixConfig')<MatrixConfig, MatrixConfigService>() {}
 
-export const DiscoveryInformationResponseSchema = Schema.Struct({
-  'm.homeserver': Schema.Struct({ base_url: Schema.String }),
-})
-
 export const make = ({ serverName }: MakeOpts) =>
   Effect.gen(function* () {
-    const httpClient = yield* HttpClient.HttpClient
-
     yield* Effect.logDebug(`Creating MatrixConfig for server: ${serverName}`)
+    const baseHttpClient = yield* BaseHttpClient
 
-    const res = yield* httpClient
-      .get(`https://${serverName}/.well-known/matrix/client`)
-      .pipe(Effect.flatMap(HttpClientResponse.schemaBodyJson(DiscoveryInformationResponseSchema)))
+    const endpoint = getDiscoveryInformation({ serverName })
 
-    return { serverName, baseUrl: res['m.homeserver'].base_url }
-  })
+    const request = yield* makeHttpRequest(endpoint)
+    const res = yield* baseHttpClient.execute(request).pipe(Effect.andThen(parseHttpResponse(endpoint)))
+
+    return { serverName, baseUrl: res['m.homeserver'].baseUrl }
+  }).pipe(Effect.provide(BaseHttpClient.Default))
 
 type MakeOpts = {
   serverName: string

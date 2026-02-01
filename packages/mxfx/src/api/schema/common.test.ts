@@ -1,6 +1,6 @@
 import { describe, expect, it } from '@effect/vitest'
 import { Effect, Schema } from 'effect'
-import { ClientEventSchema, RoomMessageEventPartialSchema } from './event'
+import { ClientEventSchema, RoomMessageEventPartialSchema } from './common'
 
 const decode = Schema.decode(
   Schema.Struct({

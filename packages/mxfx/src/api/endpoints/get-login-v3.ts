@@ -1,15 +1,23 @@
-import { Effect, Schema } from 'effect'
-import { MatrixHttpClient } from '../matrix-http-client'
-import { HttpClientResponse } from '@effect/platform'
+import { Schema } from 'effect'
+import { makeEndpoint } from '../matrix-endpoint'
 
 export const LoginFlowsV3ResponseSchema = Schema.Struct({
   flows: Schema.Array(Schema.Struct({ type: Schema.String })),
 })
 
-export const getLoginV3 = Effect.gen(function* () {
-  const matrixHttp = yield* MatrixHttpClient
-
-  const res = yield* matrixHttp.client.get('/v3/login').pipe(Effect.flatMap(HttpClientResponse.schemaBodyJson(LoginFlowsV3ResponseSchema)))
-
-  return res
-})
+/**
+ * `GET /_matrix/client/v3/login`
+ *
+ * Gets the homeserver’s supported login types to authenticate users. Clients should pick one of these and supply it as the type when
+ * logging in.
+ *
+ * @category Endpoints
+ * @see https://spec.matrix.org/v1.17/client-server-api/#get_matrixclientv3login
+ */
+export const getLoginV3 = () =>
+  makeEndpoint({
+    path: '/v3/login',
+    method: 'GET',
+    auth: false,
+    schema: LoginFlowsV3ResponseSchema,
+  })

@@ -1,5 +1,5 @@
 import { Effect, Schema, SubscriptionRef } from 'effect'
-import { ClientEventWithoutRoomIdSchema, RoomMessageEventPartialSchema } from '../api/schema/event'
+import { ClientEventWithoutRoomIdSchema, RoomMessageEventPartialSchema } from '../api/schema/common'
 import type { MxcUriType, RoomIdSchema } from '../branded'
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars

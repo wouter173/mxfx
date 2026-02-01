@@ -6,6 +6,7 @@
     ".": "./src/index.ts",
     "./api": "./src/api/index.ts",
     "./api/endpoints": "./src/api/endpoints/index.ts",
+    "./api/http-client": "./src/api/http-client/index.ts",
     "./vault": "./src/vault/index.ts"
   },
   "peerDependencies": {

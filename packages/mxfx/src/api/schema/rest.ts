@@ -1,6 +1,6 @@
 import { Schema } from 'effect'
 import { EventIdSchema, MxcUriSchema, RoomIdSchema, UserIdSchema } from '../../branded'
-import { BaseEventSchema, ClientEventSchema, ClientEventWithoutRoomIdSchema, StrippedStateEventSchema } from './event'
+import { BaseEventSchema, ClientEventSchema, ClientEventWithoutRoomIdSchema, StrippedStateEventSchema } from './common'
 
 export const AccountDataSchema = Schema.Struct({
   events: Schema.Array(BaseEventSchema),
@@ -105,15 +105,6 @@ export const DiscoveryInformationResponseSchema = Schema.Struct({
 
 export const VersionsResponseSchema = Schema.Struct({
   versions: Schema.Array(Schema.String),
-})
-
-export const LoginV3ResponseSchema = Schema.Struct({
-  access_token: Schema.String,
-  device_id: Schema.String,
-  user_id: Schema.String,
-  expires_in_ms: Schema.optional(Schema.Number.pipe(Schema.int())),
-  refresh_token: Schema.optional(Schema.String),
-  well_known: Schema.optional(DiscoveryInformationResponseSchema),
 })
 
 export const RefreshV3ResponseSchema = Schema.Struct({

@@ -8,4 +8,6 @@ export class ApiHttpError extends Data.TaggedError('mxfx/ApiHttpError')<{
   status: number
   content?: MatrixApiErrorContent
   cause?: Error
-}> {}
+}> {
+  override message: string = JSON.stringify(this)
+}

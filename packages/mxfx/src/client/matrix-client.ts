@@ -1,6 +1,6 @@
 import { Array, Duration, Effect, Fiber, Ref, Schema, SubscriptionRef } from 'effect'
 import { MatrixApi } from '../api/matrix-api'
-import { ClientEventWithoutRoomIdSchema, RoomMessageEventPartialSchema } from '../api/schema/event'
+import { ClientEventWithoutRoomIdSchema, RoomMessageEventPartialSchema } from '../api/schema/common'
 import { SyncV3ResponseSchema } from '../api/schema/rest'
 import { RoomId, type MxcUriType, type RoomIdType } from '../branded'
 import { MatrixClientSessionStore } from './matrix-client-session-store'
@@ -23,16 +23,22 @@ export class MatrixClient extends Effect.Service<MatrixClient>()('mxfx/MatrixCli
             body: ({ next_batch }) =>
               Effect.gen(function* () {
                 const urlParams = next_batch
-                  ? { timeout: Duration.toMillis(Duration.seconds(30)), full_state: false, since: next_batch }
+                  ? {
+                      timeout: Duration.toMillis(Duration.seconds(30)),
+                      full_state: false,
+                      since: next_batch,
+                    }
                   : { full_state: true }
 
                 const syncWithTokenRefresh = matrixApi.sync.get({ urlParams })
 
-                const res = (yield* Effect.retry(syncWithTokenRefresh, { times: 1 })) as Schema.Schema.Type<typeof SyncV3ResponseSchema>
+                const res = (yield* Effect.retry(syncWithTokenRefresh, {
+                  times: 1,
+                })) as Schema.Schema.Type<typeof SyncV3ResponseSchema>
 
-                yield* SubscriptionRef.updateEffect(store.ref, (state) =>
+                yield* SubscriptionRef.updateEffect(store.ref, state =>
                   Effect.gen(function* () {
-                    yield* Effect.forEach(res.account_data?.events ?? [], (event) => Effect.log(event))
+                    yield* Effect.forEach(res.account_data?.events ?? [], event => Effect.log(event))
 
                     const roomIds = yield* Effect.forEach(
                       new Set([...Object.keys(res.rooms?.join ?? {}), ...Object.keys(state.rooms)]),
@@ -45,7 +51,7 @@ export class MatrixClient extends Effect.Service<MatrixClient>()('mxfx/MatrixCli
                       }
 
                       const events = res.rooms?.join?.[roomId]?.timeline?.events ?? []
-                      const messages = Array.filterMap(events, (a) =>
+                      const messages = Array.filterMap(events, a =>
                         Schema.decodeUnknownOption(
                           Schema.Struct({
                             ...ClientEventWithoutRoomIdSchema.fields,
@@ -55,7 +61,7 @@ export class MatrixClient extends Effect.Service<MatrixClient>()('mxfx/MatrixCli
                       )
 
                       const name = (
-                        res.rooms?.join?.[roomId]?.state?.events?.find((e) => e.type === 'm.room.name')?.content as
+                        res.rooms?.join?.[roomId]?.state?.events?.find(e => e.type === 'm.room.name')?.content as
                           | { name?: string }
                           | undefined
                       )?.name as string | undefined
@@ -75,7 +81,7 @@ export class MatrixClient extends Effect.Service<MatrixClient>()('mxfx/MatrixCli
 
                 return { next_batch: res.next_batch }
               }).pipe(
-                Effect.catchAll((err) => {
+                Effect.catchAll(err => {
                   console.error(
                     'Sync error',
                     err,
@@ -127,8 +133,8 @@ export class MatrixClient extends Effect.Service<MatrixClient>()('mxfx/MatrixCli
           yield* matrixClientSessionStore.set({ baseUrl, deviceId, credentials: { token, refreshToken } })
 
           const me = yield* matrixApi.account.whoami.get().pipe(
-            Effect.tap((res) => Effect.logDebug(`Logged in as user ID: ${res.user_id}`)),
-            Effect.catchTag('mxfx/ApiHttpError', (e) =>
+            Effect.tap(res => Effect.logDebug(`Logged in as user ID: ${res.user_id}`)),
+            Effect.catchTag('mxfx/ApiHttpError', e =>
               Effect.gen(function* () {
                 yield* Effect.logError(`Failed to get user ID: ${e.message}`)
                 yield* matrixClientSessionStore.delete()
@@ -138,7 +144,7 @@ export class MatrixClient extends Effect.Service<MatrixClient>()('mxfx/MatrixCli
 
           const user = yield* matrixApi.profile
             .get({ userId: me.user_id })
-            .pipe(Effect.tap((res) => Effect.logDebug(`Fetched profile for user ID: ${me.user_id}, display name: ${res.displayname}`)))
+            .pipe(Effect.tap(res => Effect.logDebug(`Fetched profile for user ID: ${me.user_id}, display name: ${res.displayname}`)))
 
           yield* SubscriptionRef.update(store.ref, () => ({
             user: { id: me.user_id, displayName: user.displayname, avatarUrl: user.avatar_url },
@@ -165,7 +171,7 @@ export class MatrixClient extends Effect.Service<MatrixClient>()('mxfx/MatrixCli
 
           const res = yield* matrixApi.room.messages.get({ roomId, urlParams: { dir: 'b', limit: 100, from } })
 
-          const messages = Array.filterMap(res.chunk, (a) =>
+          const messages = Array.filterMap(res.chunk, a =>
             Schema.decodeUnknownOption(
               Schema.Struct({
                 ...ClientEventWithoutRoomIdSchema.fields,
@@ -174,13 +180,13 @@ export class MatrixClient extends Effect.Service<MatrixClient>()('mxfx/MatrixCli
             )(a),
           )
 
-          yield* Ref.update(store.ref, (state) => {
+          yield* Ref.update(store.ref, state => {
             if (!state.rooms[roomId]) {
               state.rooms[roomId] = { name: roomId, messages: [] }
             }
 
-            const existingMessageIds = new Set(state.rooms[roomId].messages.map((m) => m.event_id))
-            const filteredNewMessages = messages.filter((m) => !existingMessageIds.has(m.event_id))
+            const existingMessageIds = new Set(state.rooms[roomId].messages.map(m => m.event_id))
+            const filteredNewMessages = messages.filter(m => !existingMessageIds.has(m.event_id))
 
             state.rooms[roomId].messages.unshift(...filteredNewMessages)
             state.rooms[roomId].messages.sort((a, b) => a.origin_server_ts - b.origin_server_ts)

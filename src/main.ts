@@ -1,11 +1,12 @@
-import { Effect, Config } from 'effect'
+import { Effect, Config, Redacted } from 'effect'
 
 import { NodeRuntime } from '@effect/platform-node'
 import { NodeHttpClient } from '@effect/platform-node'
 import { MatrixConfig } from 'mxfx'
+import { InMemoryVault, Vault } from 'mxfx/vault'
+import { getProfileV3, postLoginV3 } from 'mxfx/api/endpoints'
+import { ApiHttpClient, AuthHttpClient, BaseHttpClient } from 'mxfx/api/http-client'
 import { MatrixApi } from 'mxfx/api'
-import { InMemoryVault } from 'mxfx/vault'
-import { getLoginV3 } from 'mxfx/api/endpoints'
 
 const program = Effect.gen(function* () {
   const matrixUserName = yield* Config.string('MATRIX_USER_NAME')
@@ -14,15 +15,28 @@ const program = Effect.gen(function* () {
   const config = yield* MatrixConfig.MatrixConfig
   yield* Effect.log({ matrixUserName, matrixUserPassword, matrixBaseUrl: config.baseUrl })
 
-  const api = yield* MatrixApi
-  const x = yield* api.request(getLoginV3)
-  yield* Effect.log({ x: JSON.stringify(x) })
+  const matrixApi = yield* MatrixApi
+  const vault = yield* Vault
+
+  const { accessToken, userId } = yield* matrixApi.execute(
+    postLoginV3({
+      type: 'm.login.password',
+      password: Redacted.value(matrixUserPassword),
+      identifier: { type: 'm.id.user', user: matrixUserName },
+      initialDeviceDisplayName: 'mxfx-client',
+    }),
+  )
+
+  yield* vault.setItem('accessToken', accessToken)
+  const y = yield* matrixApi.execute(getProfileV3({ userId }))
+  yield* Effect.log(`Logged in as user ID: ${userId} with profile: ${JSON.stringify(y)}`)
 })
 
 NodeRuntime.runMain(
   program.pipe(
     Effect.provide(MatrixApi.Default),
     Effect.provide(MatrixConfig.layerConfig({ serverName: Config.string('MATRIX_HOME_SERVER') })),
+    Effect.provide(BaseHttpClient.Default),
     Effect.provide(InMemoryVault),
     Effect.provide(NodeHttpClient.layer),
   ),
