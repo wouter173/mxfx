@@ -1,5 +1,5 @@
 import { Schema } from 'effect'
-import { makeEndpoint } from '../matrix-endpoint'
+import { makeEndpoint } from '../../matrix-endpoint'
 
 const responseSchema = Schema.Struct({
   'm.homeserver': Schema.Struct({

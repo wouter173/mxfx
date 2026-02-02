@@ -1,8 +1,8 @@
 import { Effect, Schema } from 'effect'
-import { nullable } from '../schema/common'
-import { makeEndpoint } from '../matrix-endpoint'
+import { nullable } from '../../schema/common'
+import { makeEndpoint } from '../../matrix-endpoint'
 import { HttpBody } from '@effect/platform'
-import { MxcUriSchema } from '../../branded'
+import { MxcUriSchema } from '../../../branded'
 
 const optionsSchema = Schema.Struct({
   limit: Schema.optional(Schema.Number.pipe(Schema.int())),

@@ -1,12 +1,9 @@
-import { Effect, Config, Redacted } from 'effect'
-
-import { NodeRuntime } from '@effect/platform-node'
-import { NodeHttpClient } from '@effect/platform-node'
+import { NodeHttpClient, NodeRuntime } from '@effect/platform-node'
+import { Config, Effect, Redacted } from 'effect'
 import { MatrixConfig } from 'mxfx'
+import { MatrixApi, endpoints } from 'mxfx/api'
+import { BaseHttpClient } from 'mxfx/api/http-client'
 import { InMemoryVault, Vault } from 'mxfx/vault'
-import { getProfileV3, postLoginV3, postUserDirectorySearchV3 } from 'mxfx/api/endpoints'
-import { ApiHttpClient, AuthHttpClient, BaseHttpClient } from 'mxfx/api/http-client'
-import { MatrixApi } from 'mxfx/api'
 
 const program = Effect.gen(function* () {
   const matrixUserName = yield* Config.string('MATRIX_USER_NAME')
@@ -19,7 +16,7 @@ const program = Effect.gen(function* () {
   const vault = yield* Vault
 
   const { accessToken, userId } = yield* matrixApi.execute(
-    postLoginV3({
+    endpoints.postLoginV3({
       type: 'm.login.password',
       password: Redacted.value(matrixUserPassword),
       identifier: { type: 'm.id.user', user: matrixUserName },
@@ -28,8 +25,12 @@ const program = Effect.gen(function* () {
   )
 
   yield* vault.setItem('accessToken', accessToken)
-  const y = yield* matrixApi.execute(getProfileV3({ userId }))
+  const y = yield* matrixApi.execute(endpoints.getProfileV3({ userId }))
   yield* Effect.log(`Logged in as user ID: ${userId} with profile: ${JSON.stringify(y)}`)
+
+  yield* matrixApi
+    .execute(endpoints.getCapabilitiesV3())
+    .pipe(Effect.tap(capabilities => Effect.log(`Server Capabilities: ${JSON.stringify(capabilities)}`)))
 
   // const users = yield* matrixApi.execute(postUserDirectorySearchV3({ searchTerm: 'wo', limit: 100 }))
 })

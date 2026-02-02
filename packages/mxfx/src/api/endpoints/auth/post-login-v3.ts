@@ -1,7 +1,7 @@
 import { HttpBody } from '@effect/platform'
 import { Effect, Schema } from 'effect'
-import { makeEndpoint } from '../matrix-endpoint'
-import { DiscoveryInformationResponseSchema } from '../schema/rest'
+import { makeEndpoint } from '../../matrix-endpoint'
+import { DiscoveryInformationResponseSchema } from '../../schema/rest'
 
 const commonOptionsSchema = Schema.Struct({
   initialDeviceDisplayName: Schema.optional(Schema.String).pipe(Schema.fromKey('initial_device_display_name')),

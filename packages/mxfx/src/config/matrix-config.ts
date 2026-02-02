@@ -1,5 +1,5 @@
 import { Config, Effect, Layer } from 'effect'
-import { getDiscoveryInformation } from '../api/endpoints/get-discovery-information'
+import { getDiscoveryInformation } from '../api/endpoints/discovery/get-well-known'
 import { BaseHttpClient } from '../api/http-client'
 import { makeHttpRequest, parseHttpResponse } from '../api/matrix-endpoint'
 
