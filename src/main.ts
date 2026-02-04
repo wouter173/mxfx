@@ -1,5 +1,5 @@
 import { NodeHttpClient, NodeRuntime } from '@effect/platform-node'
-import { Config, Effect, Redacted } from 'effect'
+import { Config, Effect, Logger, LogLevel, Redacted } from 'effect'
 import { MatrixConfig } from 'mxfx'
 import { MatrixApi, endpoints } from 'mxfx/api'
 import { BaseHttpClient } from 'mxfx/api/http-client'
@@ -28,11 +28,15 @@ const program = Effect.gen(function* () {
   const y = yield* matrixApi.execute(endpoints.getProfileV3({ userId }))
   yield* Effect.log(`Logged in as user ID: ${userId} with profile: ${JSON.stringify(y)}`)
 
-  yield* matrixApi
-    .execute(endpoints.getCapabilitiesV3())
-    .pipe(Effect.tap(capabilities => Effect.log(`Server Capabilities: ${JSON.stringify(capabilities)}`)))
+  // yield* matrixApi
+  //   .execute(endpoints.getCapabilitiesV3())
+  //   .pipe(Effect.tap(capabilities => Effect.log(`Server Capabilities: ${JSON.stringify(capabilities)}`)))
 
   // const users = yield* matrixApi.execute(postUserDirectorySearchV3({ searchTerm: 'wo', limit: 100 }))
+
+  yield* matrixApi
+    .execute(endpoints.getSyncV3({ fullState: true, setPresence: 'unavailable' }))
+    .pipe(Effect.tap(syncResponse => Effect.log(`Sync response: ${JSON.stringify(syncResponse)}`)))
 })
 
 NodeRuntime.runMain(
@@ -42,5 +46,6 @@ NodeRuntime.runMain(
     Effect.provide(BaseHttpClient.Default),
     Effect.provide(InMemoryVault),
     Effect.provide(NodeHttpClient.layer),
+    Logger.withMinimumLogLevel(LogLevel.Debug),
   ),
 )

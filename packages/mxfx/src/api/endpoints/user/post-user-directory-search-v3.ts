@@ -1,5 +1,5 @@
 import { Effect, Schema } from 'effect'
-import { nullable } from '../../schema/common'
+import { nullable } from '../../schema/transform'
 import { makeEndpoint } from '../../matrix-endpoint'
 import { HttpBody } from '@effect/platform'
 import { MxcUriSchema } from '../../../branded'

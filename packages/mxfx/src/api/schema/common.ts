@@ -11,7 +11,7 @@ export const BaseEventSchema = Schema.Struct({
 export const StrippedStateEventSchema = Schema.Struct({
   ...BaseEventSchema.fields,
   sender: UserIdSchema,
-  state_key: Schema.String,
+  stateKey: Schema.propertySignature(Schema.String).pipe(Schema.fromKey('state_key')),
 })
 
 //ClientEvent
@@ -19,59 +19,57 @@ export const StrippedStateEventSchema = Schema.Struct({
 type ClientEvent = {
   type: string
   content: object //TODO EventContent
-  event_id: EventIdType
-  origin_server_ts: number
-  room_id: RoomIdType
+  eventId: EventIdType
+  originServerTs: number
+  roomId: RoomIdType
   sender: UserIdType
-  state_key?: string
+  stateKey?: string
   unsigned?: {
     age?: number
     membership?: string
-    prev_content?: object //TODO EventContent
-    redacted_because?: ClientEvent
-    transaction_id?: string
+    prevContent?: object //TODO EventContent
+    redactedBecause?: ClientEvent
+    transactionId?: string
   }
 }
 
 const ClientEventUnsignedFieldSchema = Schema.Struct({
   age: Schema.optional(Schema.Number.pipe(Schema.int())),
   membership: Schema.optional(Schema.String),
-  prev_content: Schema.optional(Schema.Object), //TODO EventContent
-  redacted_because: Schema.optional(
+  prevContent: Schema.optional(Schema.Object).pipe(Schema.fromKey('prev_content')), //TODO EventContent
+  redactedBecause: Schema.optional(
     Schema.suspend((): Schema.Schema<ClientEvent> => ClientEventSchema as unknown as Schema.Schema<ClientEvent>),
-  ),
-  transaction_id: Schema.optional(Schema.String),
+  ).pipe(Schema.fromKey('redacted_because')),
+  transactionId: Schema.optional(Schema.String).pipe(Schema.fromKey('transaction_id')),
 })
 
 export const ClientEventSchema = Schema.Struct({
   ...BaseEventSchema.fields,
-  event_id: EventIdSchema,
-  origin_server_ts: Schema.Number.pipe(Schema.int()),
-  room_id: RoomIdSchema,
+  eventId: EventIdSchema.pipe(Schema.propertySignature, Schema.fromKey('event_id')),
+  originServerTs: Schema.Number.pipe(Schema.int(), Schema.propertySignature, Schema.fromKey('origin_server_ts')),
+  roomId: RoomIdSchema.pipe(Schema.propertySignature, Schema.fromKey('room_id')),
   sender: UserIdSchema,
-  state_key: Schema.optional(Schema.String),
+  stateKey: Schema.String.pipe(Schema.optional, Schema.fromKey('state_key')),
   unsigned: Schema.optional(ClientEventUnsignedFieldSchema),
 })
 
 // ClientEventWithoutRoomId
 
 type ClientEventWithoutRoomId = Omit<ClientEvent, 'room_id'> & {
-  unsigned?: Omit<ClientEvent['unsigned'], 'redacted_because'> & {
-    redacted_because?: ClientEventWithoutRoomId
+  unsigned?: Omit<ClientEvent['unsigned'], 'redactedBecause'> & {
+    redactedBecause?: ClientEventWithoutRoomId
   }
 }
 
 const ClientEventWithoutRoomIdSchemaUnsignedFieldSchema = Schema.Struct({
   ...ClientEventUnsignedFieldSchema.fields,
-  redacted_because: Schema.optional(
-    Schema.suspend(
-      (): Schema.Schema<ClientEventWithoutRoomId> => ClientEventWithoutRoomIdSchema as unknown as Schema.Schema<ClientEventWithoutRoomId>,
-    ),
-  ),
+  redactedBecause: Schema.suspend(
+    (): Schema.Schema<ClientEventWithoutRoomId> => ClientEventWithoutRoomIdSchema as unknown as Schema.Schema<ClientEventWithoutRoomId>,
+  ).pipe(Schema.optional, Schema.fromKey('redacted_because')),
 })
 
 export const ClientEventWithoutRoomIdSchema = Schema.Struct({
-  ...ClientEventSchema.omit('room_id').fields,
+  ...ClientEventSchema.omit('roomId').fields,
   unsigned: Schema.optional(ClientEventWithoutRoomIdSchemaUnsignedFieldSchema),
 })
 
@@ -82,8 +80,14 @@ export const RoomMessageEventTextCommonContentSchema = Schema.extend(
     body: Schema.String,
   }),
   Schema.Union(
-    Schema.Struct({ format: Schema.Literal('org.matrix.custom.html'), formatted_body: Schema.String }),
-    Schema.Struct({ format: Schema.Undefined, formatted_body: Schema.Undefined }),
+    Schema.Struct({
+      format: Schema.Literal('org.matrix.custom.html'),
+      formattedBody: Schema.String.pipe(Schema.propertySignature, Schema.fromKey('formatted_body')),
+    }),
+    Schema.Struct({
+      format: Schema.Undefined,
+      formattedBody: Schema.Undefined.pipe(Schema.propertySignature, Schema.fromKey('formatted_body')),
+    }),
   ),
 )
 
@@ -99,9 +103,9 @@ export const RoomMessageEventImageContentInfoSchema = Schema.Struct({
   w: Schema.optional(Schema.Number.pipe(Schema.int())),
   size: Schema.optional(Schema.Number.pipe(Schema.int())),
   mimetype: Schema.optional(Schema.String),
-  thumbnail_info: Schema.optional(RoomMessageEventImageContentInfoThumbnailInfoSchema),
-  thumbnail_url: Schema.optional(MxcUriSchema),
-  thumbnail_file: Schema.optional(Schema.Any), //TODO: EncryptedFile
+  thumbnailInfo: RoomMessageEventImageContentInfoThumbnailInfoSchema.pipe(Schema.optional, Schema.fromKey('thumbnail_info')),
+  thumbnailUrl: MxcUriSchema.pipe(Schema.optional, Schema.fromKey('thumbnail_url')),
+  thumbnailFile: Schema.Any.pipe(Schema.optional, Schema.fromKey('thumbnail_file')), //TODO: EncryptedFile
 })
 
 export const RoomMessageEventImageContentSchema = Schema.extend(
@@ -114,8 +118,14 @@ export const RoomMessageEventImageContentSchema = Schema.extend(
     file: Schema.Any, //TODO: EncryptedFile
   }),
   Schema.Union(
-    Schema.Struct({ format: Schema.Literal('org.matrix.custom.html'), formatted_body: Schema.String }),
-    Schema.Struct({ format: Schema.Undefined, formatted_body: Schema.Undefined }),
+    Schema.Struct({
+      format: Schema.Literal('org.matrix.custom.html'),
+      formattedBody: Schema.String.pipe(Schema.propertySignature, Schema.fromKey('formatted_body')),
+    }),
+    Schema.Struct({
+      format: Schema.Undefined,
+      formattedBody: Schema.Undefined.pipe(Schema.propertySignature, Schema.fromKey('formatted_body')),
+    }),
   ),
 )
 
@@ -164,9 +174,21 @@ export const RoomPinnedEventsEventPartialSchema = Schema.Struct({
   }),
 })
 
-export const nullable = <A, I>(s: Schema.Schema<A, I>) =>
-  Schema.transform(Schema.NullishOr(s), Schema.Union(Schema.typeSchema(s), Schema.Undefined), {
-    strict: true,
-    decode: value => (value === null ? undefined : value),
-    encode: value => value,
-  })
+export const AccountDataSchema = Schema.Struct({
+  events: Schema.Array(BaseEventSchema),
+})
+
+export const TimelineSchema = Schema.Struct({
+  events: Schema.optional(Schema.Array(ClientEventWithoutRoomIdSchema)),
+  limited: Schema.optional(Schema.Boolean),
+  prevBatch: Schema.String.pipe(Schema.optional, Schema.fromKey('prev_batch')),
+})
+
+export const StateSchema = Schema.Struct({ events: Schema.Array(ClientEventWithoutRoomIdSchema) })
+
+export const RoomMessageV3ResponseSchema = Schema.Struct({
+  chunk: Schema.Array(ClientEventSchema),
+  start: Schema.String,
+  end: Schema.optional(Schema.String),
+  state: Schema.optional(Schema.Array(ClientEventSchema)),
+})

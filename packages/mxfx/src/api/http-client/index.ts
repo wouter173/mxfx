@@ -1,4 +1,4 @@
-import { HttpClient, HttpClientRequest, UrlParams } from '@effect/platform'
+import { HttpBody, HttpClient, HttpClientRequest, UrlParams } from '@effect/platform'
 import { Effect, Either, Option, Schema } from 'effect'
 import { ApiHttpError } from '../error'
 import { MatrixApiErrorContentSchema } from '../schema/error'
@@ -12,7 +12,10 @@ export class BaseHttpClient extends Effect.Service<BaseHttpClient>()('mxfx/BaseH
 
     return httpClient.pipe(
       HttpClient.tapRequest(req =>
-        Effect.logDebug(`Matrix API Request: ${req.method} ${Either.getOrNull(UrlParams.makeUrl(req.url, req.urlParams, req.hash))}`),
+        Effect.logDebug(
+          `Matrix API Request: ${req.method} ${Either.getOrNull(UrlParams.makeUrl(req.url, req.urlParams, req.hash))}`,
+          req.body,
+        ),
       ),
       HttpClient.filterOrElse(
         res => res.status >= 200 && res.status < 400,
