@@ -2,7 +2,7 @@ import { Array, Duration, Effect, Fiber, Ref, Schema, SubscriptionRef } from 'ef
 import { MatrixApi } from '../api/matrix-api'
 import { ClientEventWithoutRoomIdSchema, RoomMessageEventPartialSchema } from '../api/schema/common'
 import { SyncV3ResponseSchema } from '../api/schema/rest'
-import { RoomId, type MxcUri, type RoomId } from '../branded'
+import { roomId, type mxcUri, type roomId } from '../branded'
 import { MatrixClientSessionStore } from './matrix-client-session-store'
 import { MatrixClientStore } from './matrix-client-store'
 
@@ -42,7 +42,7 @@ export class MatrixClient extends Effect.Service<MatrixClient>()('mxfx/MatrixCli
 
                     const roomIds = yield* Effect.forEach(
                       new Set([...Object.keys(res.rooms?.join ?? {}), ...Object.keys(state.rooms)]),
-                      RoomId,
+                      roomId,
                     )
 
                     for (const roomId of roomIds) {
@@ -101,7 +101,7 @@ export class MatrixClient extends Effect.Service<MatrixClient>()('mxfx/MatrixCli
 
     const api = {
       mxc: {
-        toSource: (uri?: MxcUri) =>
+        toSource: (uri?: mxcUri) =>
           Effect.gen(function* () {
             const session = yield* matrixClientSessionStore.get()
             const url = `${session.baseUrl}/_matrix/client/v1/media/download/${uri?.replace('mxc://', '')}`
@@ -164,7 +164,7 @@ export class MatrixClient extends Effect.Service<MatrixClient>()('mxfx/MatrixCli
         yield* store.reset()
       }),
 
-      loadMessages: (roomId: RoomId) =>
+      loadMessages: (roomId: roomId) =>
         Effect.gen(function* () {
           const state = yield* store.get()
           const from = state.rooms[roomId]?.lastBatchId
@@ -196,7 +196,7 @@ export class MatrixClient extends Effect.Service<MatrixClient>()('mxfx/MatrixCli
           })
         }),
 
-      sendTextMessage: ({ roomId, text }: { roomId: RoomId; text: string }) =>
+      sendTextMessage: ({ roomId, text }: { roomId: roomId; text: string }) =>
         Effect.gen(function* () {
           yield* matrixApi.room.send.put({
             roomId,

@@ -1,6 +1,7 @@
 import { Schema } from 'effect'
 
-const schema = Schema.String.pipe(Schema.pattern(/^mxc:\/\/[^\s/]+\/[^\s]+$/), Schema.brand('mxfx/MxcUri'))
+export const MxcUriBrand = Symbol.for('mxfx/MxcUri')
+const schema = Schema.String.pipe(Schema.pattern(/^mxc:\/\/[^\s/]+\/[^\s]+$/), Schema.brand(MxcUriBrand))
 
 export type MxcUri = typeof schema.Type
 export const MxcUri = {

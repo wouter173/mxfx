@@ -1,9 +1,7 @@
 import { Schema } from 'effect'
 
-const schema = Schema.String.pipe(Schema.brand('mxfx/EventId'))
+export const EventIdBrand: unique symbol = Symbol.for('mxfx/EventId')
+const schema = Schema.String.pipe(Schema.brand(EventIdBrand))
 
 export type EventId = typeof schema.Type
-export const EventId = {
-  schema,
-  make: Schema.decode(schema),
-}
+export const EventId = { schema, make: Schema.decode(schema) }

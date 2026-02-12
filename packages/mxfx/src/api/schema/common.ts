@@ -1,8 +1,8 @@
 import { Schema } from 'effect'
 import { EventId } from '../../branded/event-id'
+import { MxcUri } from '../../branded/mxc-uri'
 import { RoomId } from '../../branded/room-id'
 import { UserId } from '../../branded/user-id'
-import { MxcUri } from '../../branded'
 
 export const BaseEventSchema = Schema.Struct({
   type: Schema.String,

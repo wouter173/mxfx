@@ -1,6 +1,7 @@
 import { Schema } from 'effect'
 import { makeEndpoint } from '../../matrix-endpoint'
-import { MxcUri, type UserId } from '../../../branded'
+import { MxcUri } from '../../../branded/mxc-uri'
+import { UserId } from '../../../branded/user-id'
 
 const responseSchema = Schema.Struct({
   avatarUrl: Schema.optional(MxcUri.schema).pipe(Schema.fromKey('avatar_url')),
