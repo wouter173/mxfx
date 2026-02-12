@@ -2,7 +2,7 @@ import { Array, Duration, Effect, Fiber, Ref, Schema, SubscriptionRef } from 'ef
 import { MatrixApi } from '../api/matrix-api'
 import { ClientEventWithoutRoomIdSchema, RoomMessageEventPartialSchema } from '../api/schema/common'
 import { SyncV3ResponseSchema } from '../api/schema/rest'
-import { RoomId, type MxcUriType, type RoomIdType } from '../branded'
+import { RoomId, type MxcUri, type RoomId } from '../branded'
 import { MatrixClientSessionStore } from './matrix-client-session-store'
 import { MatrixClientStore } from './matrix-client-store'
 
@@ -101,7 +101,7 @@ export class MatrixClient extends Effect.Service<MatrixClient>()('mxfx/MatrixCli
 
     const api = {
       mxc: {
-        toSource: (uri?: MxcUriType) =>
+        toSource: (uri?: MxcUri) =>
           Effect.gen(function* () {
             const session = yield* matrixClientSessionStore.get()
             const url = `${session.baseUrl}/_matrix/client/v1/media/download/${uri?.replace('mxc://', '')}`
@@ -164,7 +164,7 @@ export class MatrixClient extends Effect.Service<MatrixClient>()('mxfx/MatrixCli
         yield* store.reset()
       }),
 
-      loadMessages: (roomId: RoomIdType) =>
+      loadMessages: (roomId: RoomId) =>
         Effect.gen(function* () {
           const state = yield* store.get()
           const from = state.rooms[roomId]?.lastBatchId
@@ -196,7 +196,7 @@ export class MatrixClient extends Effect.Service<MatrixClient>()('mxfx/MatrixCli
           })
         }),
 
-      sendTextMessage: ({ roomId, text }: { roomId: RoomIdType; text: string }) =>
+      sendTextMessage: ({ roomId, text }: { roomId: RoomId; text: string }) =>
         Effect.gen(function* () {
           yield* matrixApi.room.send.put({
             roomId,

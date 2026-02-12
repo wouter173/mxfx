@@ -1,9 +1,9 @@
 import { Schema } from 'effect'
 import { makeEndpoint } from '../../matrix-endpoint'
-import { MxcUriSchema } from '../../../branded'
+import { MxcUri, type UserId } from '../../../branded'
 
 const responseSchema = Schema.Struct({
-  avatarUrl: Schema.optional(MxcUriSchema).pipe(Schema.fromKey('avatar_url')),
+  avatarUrl: Schema.optional(MxcUri.schema).pipe(Schema.fromKey('avatar_url')),
   displayname: Schema.optional(Schema.String),
   //TODO: Make versioned fields
   'm.tz': Schema.optional(Schema.String),
@@ -19,7 +19,7 @@ const responseSchema = Schema.Struct({
  * @category Endpoints
  * @see https://spec.matrix.org/v1.17/client-server-api/#get_matrixclientv3profileuserid
  */
-export const getProfileV3 = ({ userId }: { userId: string }) =>
+export const getProfileV3 = ({ userId }: { userId: UserId }) =>
   makeEndpoint({
     path: `/v3/profile/${encodeURIComponent(userId)}`,
     method: 'GET',

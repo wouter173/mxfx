@@ -2,7 +2,7 @@ import { Effect, Schema } from 'effect'
 import { nullable } from '../../schema/transform'
 import { makeEndpoint } from '../../matrix-endpoint'
 import { HttpBody } from '@effect/platform'
-import { MxcUriSchema } from '../../../branded'
+import { MxcUri } from '../../../branded/mxc-uri'
 
 const optionsSchema = Schema.Struct({
   limit: Schema.optional(Schema.Number.pipe(Schema.int())),
@@ -10,7 +10,7 @@ const optionsSchema = Schema.Struct({
 })
 
 const userResponseSchema = Schema.Struct({
-  avatarUrl: Schema.optional(nullable(MxcUriSchema)).pipe(Schema.fromKey('avatar_url')),
+  avatarUrl: Schema.optional(nullable(MxcUri.schema)).pipe(Schema.fromKey('avatar_url')),
   displayName: Schema.optional(nullable(Schema.String)).pipe(Schema.fromKey('display_name')),
   userId: Schema.propertySignature(Schema.String).pipe(Schema.fromKey('user_id')),
 })

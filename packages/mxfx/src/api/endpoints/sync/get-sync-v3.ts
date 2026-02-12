@@ -1,8 +1,10 @@
 import { Effect, Schema } from 'effect'
 import { makeEndpoint } from '../../matrix-endpoint'
 import { AccountDataSchema, BaseEventSchema, StateSchema, StrippedStateEventSchema, TimelineSchema } from '../../schema/common'
-import { EventIdSchema, RoomIdSchema } from '../../../branded'
+
 import { HttpBody } from '@effect/platform'
+import { RoomId } from '../../../branded/room-id'
+import { EventId } from '../../../branded/event-id'
 
 const presenceSchema = Schema.Union(Schema.Literal('online'), Schema.Literal('offline'), Schema.Literal('unavailable'))
 
@@ -31,7 +33,7 @@ const responseSchema = Schema.Struct({
     Schema.Struct({
       invite: Schema.optional(
         Schema.Record({
-          key: RoomIdSchema,
+          key: RoomId.schema,
           value: Schema.Struct({
             inviteState: Schema.optional(Schema.Struct({ events: Schema.Array(StrippedStateEventSchema) })).pipe(
               Schema.fromKey('invite_state'),
@@ -41,7 +43,7 @@ const responseSchema = Schema.Struct({
       ),
       join: Schema.optional(
         Schema.Record({
-          key: RoomIdSchema,
+          key: RoomId.schema,
           value: Schema.Struct({
             accountData: Schema.optional(AccountDataSchema).pipe(Schema.fromKey('account_data')),
             ephemeral: Schema.optional(Schema.Struct({ events: Schema.Array(BaseEventSchema) })), //TODO
@@ -62,7 +64,7 @@ const responseSchema = Schema.Struct({
             ).pipe(Schema.fromKey('unread_notifications')),
             unreadThreadNotifications: Schema.optional(
               Schema.Record({
-                key: EventIdSchema,
+                key: EventId.schema,
                 value: Schema.Struct({
                   highlightCount: Schema.optional(Schema.Number.pipe(Schema.int())).pipe(Schema.fromKey('highlight_count')),
                   notificationCount: Schema.optional(Schema.Number.pipe(Schema.int())).pipe(Schema.fromKey('notification_count')),
@@ -74,7 +76,7 @@ const responseSchema = Schema.Struct({
       ),
       knock: Schema.optional(
         Schema.Record({
-          key: RoomIdSchema,
+          key: RoomId.schema,
           value: Schema.Struct({
             knockState: Schema.optional(Schema.Struct({ events: Schema.Array(StrippedStateEventSchema) })).pipe(
               Schema.fromKey('knock_state'),
@@ -84,7 +86,7 @@ const responseSchema = Schema.Struct({
       ),
       leave: Schema.optional(
         Schema.Record({
-          key: RoomIdSchema,
+          key: RoomId.schema,
           value: Schema.Struct({
             accountData: Schema.optional(AccountDataSchema).pipe(Schema.fromKey('account_data')),
             state: Schema.optional(StateSchema),

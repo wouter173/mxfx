@@ -1,6 +1,6 @@
 import { Effect, Schema, SubscriptionRef } from 'effect'
 import { ClientEventWithoutRoomIdSchema, RoomMessageEventPartialSchema } from '../api/schema/common'
-import type { MxcUriType, RoomIdSchema } from '../branded'
+import type { MxcUri, RoomIdSchema } from '../branded'
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const RoomMessageEvent = Schema.Struct({
@@ -14,7 +14,7 @@ export type Store = {
   user: {
     id: string
     displayName?: string
-    avatarUrl?: MxcUriType
+    avatarUrl?: MxcUri
   } | null
   rooms: Record<
     typeof RoomIdSchema.Type,

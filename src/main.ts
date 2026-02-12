@@ -4,7 +4,7 @@ import { MatrixConfig } from 'mxfx'
 import { MatrixApi, endpoints } from 'mxfx/api'
 import { BaseHttpClient } from 'mxfx/api/http-client'
 import { InMemoryVault, Vault } from 'mxfx/vault'
-import { UserId } from '../packages/mxfx/src/branded'
+import { UserId } from 'mxfx/branded'
 
 const program = Effect.gen(function* () {
   const matrixUserName = yield* Config.string('MATRIX_USER_NAME')
@@ -16,7 +16,7 @@ const program = Effect.gen(function* () {
   const matrixApi = yield* MatrixApi
   const vault = yield* Vault
 
-  const userId = yield* UserId(`@${matrixUserName}:${matrixConfig.serverName}`)
+  const userId = yield* UserId.make(`@${matrixUserName}:${matrixConfig.serverName}`)
   const accessToken = yield* vault.getItem('accessToken')
 
   if (Option.isNone(accessToken)) {

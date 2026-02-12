@@ -1,5 +1,8 @@
 import { Schema } from 'effect'
-import { EventIdSchema, MxcUriSchema, RoomIdSchema, UserIdSchema, type EventIdType, type RoomIdType, type UserIdType } from '../../branded'
+import { EventId } from '../../branded/event-id'
+import { RoomId } from '../../branded/room-id'
+import { UserId } from '../../branded/user-id'
+import { MxcUri } from '../../branded'
 
 export const BaseEventSchema = Schema.Struct({
   type: Schema.String,
@@ -10,7 +13,7 @@ export const BaseEventSchema = Schema.Struct({
 
 export const StrippedStateEventSchema = Schema.Struct({
   ...BaseEventSchema.fields,
-  sender: UserIdSchema,
+  sender: UserId.schema,
   stateKey: Schema.propertySignature(Schema.String).pipe(Schema.fromKey('state_key')),
 })
 
@@ -19,10 +22,10 @@ export const StrippedStateEventSchema = Schema.Struct({
 type ClientEvent = {
   type: string
   content: object //TODO EventContent
-  eventId: EventIdType
+  eventId: EventId
   originServerTs: number
-  roomId: RoomIdType
-  sender: UserIdType
+  roomId: RoomId
+  sender: UserId
   stateKey?: string
   unsigned?: {
     age?: number
@@ -45,10 +48,10 @@ const ClientEventUnsignedFieldSchema = Schema.Struct({
 
 export const ClientEventSchema = Schema.Struct({
   ...BaseEventSchema.fields,
-  eventId: EventIdSchema.pipe(Schema.propertySignature, Schema.fromKey('event_id')),
+  eventId: EventId.schema.pipe(Schema.propertySignature, Schema.fromKey('event_id')),
   originServerTs: Schema.Number.pipe(Schema.int(), Schema.propertySignature, Schema.fromKey('origin_server_ts')),
-  roomId: RoomIdSchema.pipe(Schema.propertySignature, Schema.fromKey('room_id')),
-  sender: UserIdSchema,
+  roomId: RoomId.schema.pipe(Schema.propertySignature, Schema.fromKey('room_id')),
+  sender: UserId.schema,
   stateKey: Schema.String.pipe(Schema.optional, Schema.fromKey('state_key')),
   unsigned: Schema.optional(ClientEventUnsignedFieldSchema),
 })
@@ -104,7 +107,7 @@ export const RoomMessageEventImageContentInfoSchema = Schema.Struct({
   size: Schema.optional(Schema.Number.pipe(Schema.int())),
   mimetype: Schema.optional(Schema.String),
   thumbnailInfo: RoomMessageEventImageContentInfoThumbnailInfoSchema.pipe(Schema.optional, Schema.fromKey('thumbnail_info')),
-  thumbnailUrl: MxcUriSchema.pipe(Schema.optional, Schema.fromKey('thumbnail_url')),
+  thumbnailUrl: MxcUri.schema.pipe(Schema.optional, Schema.fromKey('thumbnail_url')),
   thumbnailFile: Schema.Any.pipe(Schema.optional, Schema.fromKey('thumbnail_file')), //TODO: EncryptedFile
 })
 
@@ -114,7 +117,7 @@ export const RoomMessageEventImageContentSchema = Schema.extend(
     body: Schema.String, // If filename is not set or the value of both properties are identical, this is the filename of the original upload. Otherwise, this is a caption for the image.
     filename: Schema.optional(Schema.String),
     info: Schema.optional(RoomMessageEventImageContentInfoSchema),
-    url: MxcUriSchema,
+    url: MxcUri.schema,
     file: Schema.Any, //TODO: EncryptedFile
   }),
   Schema.Union(
@@ -154,7 +157,7 @@ export const RoomTopicEventPartialSchema = Schema.Struct({
 export const RoomAvatarEventPartialSchema = Schema.Struct({
   type: Schema.Literal('m.room.avatar'),
   content: Schema.Struct({
-    url: MxcUriSchema,
+    url: MxcUri.schema,
     info: Schema.optional(
       Schema.Struct({
         mimetype: Schema.String,
@@ -170,7 +173,7 @@ export const RoomAvatarEventPartialSchema = Schema.Struct({
 export const RoomPinnedEventsEventPartialSchema = Schema.Struct({
   type: Schema.Literal('m.room.pinned_events'),
   content: Schema.Struct({
-    pinned: Schema.Array(EventIdSchema),
+    pinned: Schema.Array(EventId.schema),
   }),
 })
 
