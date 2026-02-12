@@ -28,4 +28,5 @@ type MakeOpts = {
 }
 
 export const layer = (opts: MakeOpts) => Layer.effect(MatrixConfig, make(opts))
-export const layerConfig = (_: Config.Config.Wrap<MakeOpts>) => Layer.effect(MatrixConfig, Effect.flatMap(Config.unwrap(_), make))
+export const layerConfig = (optsConfig: Config.Config.Wrap<MakeOpts>) =>
+  Layer.effect(MatrixConfig, Effect.flatMap(Config.unwrap(optsConfig), make))

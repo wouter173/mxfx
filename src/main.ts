@@ -1,30 +1,38 @@
 import { NodeHttpClient, NodeRuntime } from '@effect/platform-node'
-import { Config, Effect, Logger, LogLevel, Redacted } from 'effect'
+import { Config, Effect, Logger, LogLevel, Option, Redacted } from 'effect'
 import { MatrixConfig } from 'mxfx'
 import { MatrixApi, endpoints } from 'mxfx/api'
 import { BaseHttpClient } from 'mxfx/api/http-client'
 import { InMemoryVault, Vault } from 'mxfx/vault'
+import { UserId } from '../packages/mxfx/src/branded'
 
 const program = Effect.gen(function* () {
   const matrixUserName = yield* Config.string('MATRIX_USER_NAME')
   const matrixUserPassword = yield* Config.redacted('MATRIX_USER_PASSWORD')
 
-  const config = yield* MatrixConfig.MatrixConfig
-  yield* Effect.log({ matrixUserName, matrixUserPassword, matrixBaseUrl: config.baseUrl })
+  const matrixConfig = yield* MatrixConfig.MatrixConfig
+  yield* Effect.log({ matrixUserName, matrixUserPassword, matrixBaseUrl: matrixConfig.baseUrl })
 
   const matrixApi = yield* MatrixApi
   const vault = yield* Vault
 
-  const { accessToken, userId } = yield* matrixApi.execute(
-    endpoints.postLoginV3({
-      type: 'm.login.password',
-      password: Redacted.value(matrixUserPassword),
-      identifier: { type: 'm.id.user', user: matrixUserName },
-      initialDeviceDisplayName: 'mxfx-client',
-    }),
-  )
+  const userId = yield* UserId(`@${matrixUserName}:${matrixConfig.serverName}`)
+  const accessToken = yield* vault.getItem('accessToken')
 
-  yield* vault.setItem('accessToken', accessToken)
+  if (Option.isNone(accessToken)) {
+    yield* Effect.log('No access token found in vault, logging in...')
+    const loginResult = yield* matrixApi.execute(
+      endpoints.postLoginV3({
+        type: 'm.login.password',
+        password: Redacted.value(matrixUserPassword),
+        identifier: { type: 'm.id.user', user: matrixUserName },
+        initialDeviceDisplayName: 'mxfx-client',
+      }),
+    )
+
+    yield* vault.setItem('accessToken', loginResult.accessToken)
+  }
+
   const y = yield* matrixApi.execute(endpoints.getProfileV3({ userId }))
   yield* Effect.log(`Logged in as user ID: ${userId} with profile: ${JSON.stringify(y)}`)
 
@@ -44,7 +52,7 @@ NodeRuntime.runMain(
     Effect.provide(MatrixApi.Default),
     Effect.provide(MatrixConfig.layerConfig({ serverName: Config.string('MATRIX_HOME_SERVER') })),
     Effect.provide(BaseHttpClient.Default),
-    Effect.provide(InMemoryVault),
+    Effect.provide(InMemoryVault.layerConfig({ values: { accessToken: Config.string('MATRIX_ACCESS_TOKEN') } })),
     Effect.provide(NodeHttpClient.layer),
     Logger.withMinimumLogLevel(LogLevel.Debug),
   ),
