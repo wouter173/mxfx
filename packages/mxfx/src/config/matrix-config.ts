@@ -15,7 +15,7 @@ export const make = ({ serverName }: MakeOpts) =>
     yield* Effect.logDebug(`Creating MatrixConfig for server: ${serverName}`)
     const baseHttpClient = yield* BaseHttpClient
 
-    const endpoint = getDiscoveryInformation({ serverName })
+    const endpoint = yield* getDiscoveryInformation({ serverName })
 
     const request = yield* makeHttpRequest(endpoint)
     const res = yield* baseHttpClient.execute(request).pipe(Effect.andThen(parseHttpResponse(endpoint)))

@@ -1,4 +1,4 @@
-import { Schema } from 'effect'
+import { Effect, Schema } from 'effect'
 import { makeEndpoint } from '../../matrix-endpoint'
 import { MxcUri } from '../../../branded/mxc-uri'
 import { UserId } from '../../../branded/user-id'

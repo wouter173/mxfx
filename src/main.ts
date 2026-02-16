@@ -1,8 +1,7 @@
 import { NodeHttpClient, NodeRuntime } from '@effect/platform-node'
-import { Config, Effect, Logger, LogLevel, Option, Redacted } from 'effect'
+import { Config, Duration, Effect, Layer, Logger, LogLevel, Option, Redacted } from 'effect'
 import { MatrixConfig } from 'mxfx'
 import { MatrixApi, endpoints } from 'mxfx/api'
-import { BaseHttpClient } from 'mxfx/api/http-client'
 import { InMemoryVault, Vault } from 'mxfx/vault'
 import { UserId } from 'mxfx/branded'
 
@@ -21,19 +20,19 @@ const program = Effect.gen(function* () {
 
   if (Option.isNone(accessToken)) {
     yield* Effect.log('No access token found in vault, logging in...')
-    const loginResult = yield* matrixApi.execute(
-      endpoints.postLoginV3({
+    const loginResult = yield* endpoints
+      .postLoginV3({
         type: 'm.login.password',
         password: Redacted.value(matrixUserPassword),
         identifier: { type: 'm.id.user', user: matrixUserName },
         initialDeviceDisplayName: 'mxfx-client',
-      }),
-    )
+      })
+      .pipe(Effect.andThen(matrixApi.execute))
 
     yield* vault.setItem('accessToken', loginResult.accessToken)
   }
 
-  const y = yield* matrixApi.execute(endpoints.getProfileV3({ userId }))
+  const y = yield* endpoints.getProfileV3({ userId }).pipe(Effect.andThen(matrixApi.execute))
   yield* Effect.log(`Logged in as user ID: ${userId} with profile: ${JSON.stringify(y)}`)
 
   // yield* matrixApi
@@ -42,18 +41,33 @@ const program = Effect.gen(function* () {
 
   // const users = yield* matrixApi.execute(postUserDirectorySearchV3({ searchTerm: 'wo', limit: 100 }))
 
-  yield* matrixApi
-    .execute(endpoints.getSyncV3({ fullState: true, setPresence: 'unavailable' }))
-    .pipe(Effect.tap(syncResponse => Effect.log(`Sync response: ${JSON.stringify(syncResponse)}`)))
+  const syncLoop = Effect.iterate(
+    { nextBatch: Option.none<string>() },
+    {
+      body: ({ nextBatch }) =>
+        endpoints
+          .getSyncV3({
+            timeout: Duration.seconds(30),
+            since: nextBatch.pipe(Option.getOrUndefined),
+            fullState: nextBatch.pipe(Option.isNone),
+          })
+          .pipe(
+            Effect.andThen(matrixApi.execute),
+            Effect.tap(syncResponse => Effect.log(`Sync response: ${JSON.stringify(syncResponse)}`)),
+            Effect.andThen(syncResponse => ({ nextBatch: Option.some(syncResponse.nextBatch) })),
+          ),
+      while: () => true,
+    },
+  )
+
+  const syncLoopFiber = yield* Effect.forkDaemon(syncLoop)
+  yield* syncLoopFiber.await
 })
 
-NodeRuntime.runMain(
-  program.pipe(
-    Effect.provide(MatrixApi.Default),
-    Effect.provide(MatrixConfig.layerConfig({ serverName: Config.string('MATRIX_HOME_SERVER') })),
-    Effect.provide(BaseHttpClient.Default),
-    Effect.provide(InMemoryVault.layerConfig({ values: { accessToken: Config.string('MATRIX_ACCESS_TOKEN') } })),
-    Effect.provide(NodeHttpClient.layer),
-    Logger.withMinimumLogLevel(LogLevel.Debug),
-  ),
+const mxfxLive = MatrixApi.Default.pipe(
+  Layer.provideMerge(InMemoryVault.layerConfig({ values: { accessToken: Config.string('MATRIX_ACCESS_TOKEN') } })),
+  Layer.provideMerge(MatrixConfig.layerConfig({ serverName: Config.string('MATRIX_HOME_SERVER') })),
+  Layer.provide(NodeHttpClient.layer),
 )
+
+NodeRuntime.runMain(program.pipe(Effect.provide(mxfxLive), Logger.withMinimumLogLevel(LogLevel.Debug)))

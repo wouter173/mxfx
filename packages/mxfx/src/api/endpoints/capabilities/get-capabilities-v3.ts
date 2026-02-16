@@ -1,4 +1,4 @@
-import { Schema } from 'effect'
+import { Effect, Schema } from 'effect'
 import { makeEndpoint } from '../../matrix-endpoint'
 
 const booleanCapabilitySchema = Schema.Struct({

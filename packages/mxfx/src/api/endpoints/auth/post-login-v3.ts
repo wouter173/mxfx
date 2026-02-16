@@ -41,10 +41,13 @@ const responseSchema = Schema.Struct({
  * @see https://spec.matrix.org/v1.17/client-server-api/#post_matrixclientv3login
  */
 export const postLoginV3 = (options: Schema.Schema.Type<typeof optionsSchema>) =>
-  makeEndpoint({
-    auth: false,
-    method: 'POST',
-    path: '/v3/login',
-    body: Schema.encode(optionsSchema)(options).pipe(Effect.andThen(HttpBody.json)),
-    schema: responseSchema,
+  Effect.gen(function* () {
+    const body = yield* Schema.encode(optionsSchema)(options).pipe(Effect.andThen(HttpBody.json))
+    return yield* makeEndpoint({
+      auth: false,
+      method: 'POST',
+      path: '/v3/login',
+      body,
+      schema: responseSchema,
+    })
   })

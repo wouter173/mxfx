@@ -21,19 +21,23 @@ const responseSchema = Schema.Struct({
 })
 
 /**
- * `POST /_matrix/client/v3/login`
+ * `POST /_matrix/client/v3/user_directory/search `
  *
  * Performs a search for users. The homeserver may determine which subset of users are searched. However, the homeserver MUST at a minimum
  * consider users who are visible to the requester based on their membership in rooms known to the homeserver.
  *
  * @category Endpoints
- * @see https://spec.matrix.org/v1.17/client-server-api/#post_matrixclientv3login
+ * @see https://spec.matrix.org/v1.17/client-server-api/#post_matrixclientv3user_directorysearch
  */
 export const postUserDirectorySearchV3 = (options: Schema.Schema.Type<typeof optionsSchema>) =>
-  makeEndpoint({
-    auth: true,
-    method: 'POST',
-    path: '/v3/user_directory/search',
-    body: Schema.encode(optionsSchema)(options).pipe(Effect.andThen(HttpBody.json)),
-    schema: responseSchema,
+  Effect.gen(function* () {
+    const body = yield* Schema.encode(optionsSchema)(options).pipe(Effect.andThen(HttpBody.json))
+
+    return yield* makeEndpoint({
+      auth: true,
+      method: 'POST',
+      path: '/v3/user_directory/search',
+      body,
+      schema: responseSchema,
+    })
   })

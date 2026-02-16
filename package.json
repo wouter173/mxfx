@@ -24,6 +24,7 @@
     "prettier-plugin-jsdoc": "^1.8.0",
     "prettier": "^3.8.1",
     "@effect/vitest": "^0.27.0",
+    "@effect/language-service": "^0.73.1",
     "dotenv-cli": "^11.0.0",
     "expo-secure-store": "^15.0.7",
     "tsx": "^4.19.4",

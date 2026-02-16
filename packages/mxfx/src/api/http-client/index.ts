@@ -13,7 +13,7 @@ export class BaseHttpClient extends Effect.Service<BaseHttpClient>()('mxfx/BaseH
     return httpClient.pipe(
       HttpClient.tapRequest(req =>
         Effect.logDebug(
-          `Matrix API Request: ${req.method} ${Either.getOrNull(UrlParams.makeUrl(req.url, req.urlParams, req.hash))}`,
+          `Matrix API Request: ${req.method} ${Either.getOrElse(UrlParams.makeUrl(req.url, req.urlParams, req.hash), () => '')}`,
           req.body,
         ),
       ),
@@ -58,7 +58,7 @@ export class AuthHttpClient extends Effect.Service<AuthHttpClient>()('mxfx/AuthH
       mapRequestEffect(req =>
         vault.getItem('accessToken').pipe(
           Effect.flatten,
-          Effect.mapError(() => new Error('No access token found in vault')),
+          Effect.mapError(() => new Error('No access token found in vault')), //TODO: use a specific error type here
           Effect.andThen(token => HttpClientRequest.bearerToken(req, token)),
         ),
       ),

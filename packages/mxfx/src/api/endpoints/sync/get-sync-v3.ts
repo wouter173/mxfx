@@ -2,9 +2,9 @@ import { Effect, Schema } from 'effect'
 import { makeEndpoint } from '../../matrix-endpoint'
 import { AccountDataSchema, BaseEventSchema, StateSchema, StrippedStateEventSchema, TimelineSchema } from '../../schema/common'
 
-import { HttpBody } from '@effect/platform'
-import { roomId } from '../../../branded/room-id'
-import { eventId } from '../../../branded/event-id'
+import { HttpBody, UrlParams } from '@effect/platform'
+import { RoomId } from '../../../branded/room-id'
+import { EventId } from '../../../branded/event-id'
 
 const presenceSchema = Schema.Union(Schema.Literal('online'), Schema.Literal('offline'), Schema.Literal('unavailable'))
 
@@ -33,7 +33,7 @@ const responseSchema = Schema.Struct({
     Schema.Struct({
       invite: Schema.optional(
         Schema.Record({
-          key: roomId,
+          key: RoomId.schema,
           value: Schema.Struct({
             inviteState: Schema.optional(Schema.Struct({ events: Schema.Array(StrippedStateEventSchema) })).pipe(
               Schema.fromKey('invite_state'),
@@ -43,7 +43,7 @@ const responseSchema = Schema.Struct({
       ),
       join: Schema.optional(
         Schema.Record({
-          key: roomId,
+          key: RoomId.schema,
           value: Schema.Struct({
             accountData: Schema.optional(AccountDataSchema).pipe(Schema.fromKey('account_data')),
             ephemeral: Schema.optional(Schema.Struct({ events: Schema.Array(BaseEventSchema) })), //TODO
@@ -64,7 +64,7 @@ const responseSchema = Schema.Struct({
             ).pipe(Schema.fromKey('unread_notifications')),
             unreadThreadNotifications: Schema.optional(
               Schema.Record({
-                key: eventId,
+                key: EventId.schema,
                 value: Schema.Struct({
                   highlightCount: Schema.optional(Schema.Number.pipe(Schema.int())).pipe(Schema.fromKey('highlight_count')),
                   notificationCount: Schema.optional(Schema.Number.pipe(Schema.int())).pipe(Schema.fromKey('notification_count')),
@@ -76,7 +76,7 @@ const responseSchema = Schema.Struct({
       ),
       knock: Schema.optional(
         Schema.Record({
-          key: roomId,
+          key: RoomId.schema,
           value: Schema.Struct({
             knockState: Schema.optional(Schema.Struct({ events: Schema.Array(StrippedStateEventSchema) })).pipe(
               Schema.fromKey('knock_state'),
@@ -86,7 +86,7 @@ const responseSchema = Schema.Struct({
       ),
       leave: Schema.optional(
         Schema.Record({
-          key: roomId,
+          key: RoomId.schema,
           value: Schema.Struct({
             accountData: Schema.optional(AccountDataSchema).pipe(Schema.fromKey('account_data')),
             state: Schema.optional(StateSchema),
@@ -114,10 +114,14 @@ const responseSchema = Schema.Struct({
  * @see https://spec.matrix.org/v1.17/client-server-api/#get_matrixclientv3sync
  */
 export const getSyncV3 = (options: typeof optionsSchema.Type) =>
-  makeEndpoint({
-    path: '/v3/sync',
-    method: 'GET',
-    auth: true,
-    body: Schema.encode(optionsSchema)(options).pipe(Effect.andThen(HttpBody.json)),
-    schema: responseSchema,
+  Effect.gen(function* () {
+    const params = yield* Schema.encode(optionsSchema)(options)
+
+    return yield* makeEndpoint({
+      path: '/v3/sync',
+      method: 'GET',
+      auth: true,
+      params,
+      schema: responseSchema,
+    })
   })
