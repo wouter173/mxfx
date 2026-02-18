@@ -1,0 +1,160 @@
+Endpoints:
+
+- [x] GET /.well-known/matrix/client
+- [ ] GET /.well-known/matrix/support
+- [ ] GET /\_matrix/client/versions
+- [ ] GET /\_matrix/client/v1/register/m.login.registration_token/validity
+- [x] GET /\_matrix/client/v3/login
+- [x] POST /\_matrix/client/v3/login
+- [ ] POST /\_matrix/client/v1/login/get_token
+- [ ] POST /\_matrix/client/v3/refresh
+- [ ] POST /\_matrix/client/v3/logout
+- [ ] POST /\_matrix/client/v3/logout/all
+- [ ] POST /\_matrix/client/v3/register
+- [ ] GET /\_matrix/client/v3/register/available
+- [ ] POST /\_matrix/client/v3/register/email/requestToken
+- [ ] POST /\_matrix/client/v3/register/msisdn/requestToken
+- [ ] POST /\_matrix/client/v3/account/password
+- [ ] POST /\_matrix/client/v3/account/password/email/requestToken
+- [ ] POST /\_matrix/client/v3/account/password/msisdn/requestToken
+- [ ] POST /\_matrix/client/v3/account/deactivate
+- [ ] GET /\_matrix/client/v1/auth_metadata
+- [ ] GET /\_matrix/client/v3/account/3pid
+- [ ] POST /\_matrix/client/v3/account/3pid (deprecated)
+- [ ] POST /\_matrix/client/v3/account/3pid/add
+- [ ] POST /\_matrix/client/v3/account/3pid/bind
+- [ ] POST /\_matrix/client/v3/account/3pid/delete
+- [ ] POST /\_matrix/client/v3/account/3pid/email/requestToken
+- [ ] POST /\_matrix/client/v3/account/3pid/msisdn/requestToken
+- [ ] POST /\_matrix/client/v3/account/3pid/unbind
+- [ ] GET /\_matrix/client/v3/account/whoami
+- [x] GET /\_matrix/client/v3/capabilities
+- [ ] POST /\_matrix/client/v3/user/{userId}/filter
+- [ ] GET /\_matrix/client/v3/user/{userId}/filter/{filterId}
+- [x] GET /\_matrix/client/v3/sync
+- [ ] GET /\_matrix/client/v3/events (deprecated)
+- [ ] GET /\_matrix/client/v3/events/{eventId} (deprecated)
+- [ ] GET /\_matrix/client/v3/initialSync (deprecated)
+- [ ] GET /\_matrix/client/v3/rooms/{roomId}/event/{eventId}
+- [ ] GET /\_matrix/client/v3/rooms/{roomId}/joined_members
+- [ ] GET /\_matrix/client/v3/rooms/{roomId}/members
+- [ ] GET /\_matrix/client/v3/rooms/{roomId}/state
+- [ ] GET /\_matrix/client/v3/rooms/{roomId}/state/{eventType}/{stateKey}
+- [ ] GET /\_matrix/client/v3/rooms/{roomId}/messages
+- [ ] GET /\_matrix/client/v1/rooms/{roomId}/timestamp_to_event
+- [ ] GET /\_matrix/client/v3/rooms/{roomId}/initialSync
+- [ ] PUT /\_matrix/client/v3/rooms/{roomId}/state/{eventType}/{stateKey}
+- [ ] PUT /\_matrix/client/v3/rooms/{roomId}/send/{eventType}/{txnId}
+- [ ] PUT /\_matrix/client/v3/rooms/{roomId}/redact/{eventId}/{txnId}
+- [ ] GET /\_matrix/client/v1/rooms/{roomId}/relations/{eventId}
+- [ ] GET /\_matrix/client/v1/rooms/{roomId}/relations/{eventId}/{relType}
+- [ ] GET /\_matrix/client/v1/rooms/{roomId}/relations/{eventId}/{relType}/{eventType}
+- [ ] POST /\_matrix/client/v3/createRoom
+- [ ] GET /\_matrix/client/v3/directory/room/{roomAlias}
+- [ ] PUT /\_matrix/client/v3/directory/room/{roomAlias}
+- [ ] DELETE /\_matrix/client/v3/directory/room/{roomAlias}
+- [ ] GET /\_matrix/client/v3/rooms/{roomId}/aliases
+- [ ] GET /\_matrix/client/v3/joined_rooms
+- [ ] POST /\_matrix/client/v3/rooms/{roomId}/invite
+- [ ] POST /\_matrix/client/v3/join/{roomIdOrAlias}
+- [ ] POST /\_matrix/client/v3/rooms/{roomId}/join
+- [ ] POST /\_matrix/client/v3/knock/{roomIdOrAlias}
+- [ ] POST /\_matrix/client/v3/rooms/{roomId}/forget
+- [ ] POST /\_matrix/client/v3/rooms/{roomId}/leave
+- [ ] POST /\_matrix/client/v3/rooms/{roomId}/kick
+- [ ] POST /\_matrix/client/v3/rooms/{roomId}/ban
+- [ ] POST /\_matrix/client/v3/rooms/{roomId}/unban
+- [ ] GET /\_matrix/client/v3/directory/list/room/{roomId}
+- [ ] PUT /\_matrix/client/v3/directory/list/room/{roomId}
+- [ ] GET /\_matrix/client/v3/publicRooms
+- [ ] POST /\_matrix/client/v3/publicRooms
+- [ ] GET /\_matrix/client/v1/room_summary/{roomIdOrAlias}
+- [ ] POST /\_matrix/client/v3/user_directory/search
+- [x] GET /\_matrix/client/v3/profile/{userId}
+- [ ] GET /\_matrix/client/v3/profile/{userId}/{keyName}
+- [ ] PUT /\_matrix/client/v3/profile/{userId}/{keyName}
+- [ ] DELETE /\_matrix/client/v3/profile/{userId}/{keyName}
+- [ ] GET /\_matrix/client/v3/user/{userId}/account_data/{type}
+- [ ] PUT /\_matrix/client/v3/user/{userId}/account_data/{type}
+- [ ] GET /\_matrix/client/v3/user/{userId}/rooms/{roomId}/account_data/{type}
+- [ ] PUT /\_matrix/client/v3/user/{userId}/rooms/{roomId}/account_data/{type}
+- [ ] GET /\_matrix/client/v1/media/config
+- [ ] GET /\_matrix/client/v1/media/download/{serverName}/{mediaId}
+- [ ] GET /\_matrix/client/v1/media/download/{serverName}/{mediaId}/{fileName}
+- [ ] GET /\_matrix/client/v1/media/preview_url
+- [ ] GET /\_matrix/client/v1/media/thumbnail/{serverName}/{mediaId}
+- [ ] POST /\_matrix/media/v1/create
+- [ ] GET /\_matrix/media/v3/config (deprecated)
+- [ ] GET /\_matrix/media/v3/download/{serverName}/{mediaId} (deprecated)
+- [ ] GET /\_matrix/media/v3/download/{serverName}/{mediaId}/{fileName} (deprecated)
+- [ ] GET /\_matrix/media/v3/preview_url (deprecated)
+- [ ] GET /\_matrix/media/v3/thumbnail/{serverName}/{mediaId} (deprecated)
+- [ ] POST /\_matrix/media/v3/upload
+- [ ] PUT /\_matrix/media/v3/upload/{serverName}/{mediaId}
+- [ ] POST /\_matrix/client/v3/delete_devices
+- [ ] GET /\_matrix/client/v3/devices
+- [ ] GET /\_matrix/client/v3/devices/{deviceId}
+- [ ] PUT /\_matrix/client/v3/devices/{deviceId}
+- [ ] DELETE /\_matrix/client/v3/devices/{deviceId}
+- [ ] POST /\_matrix/client/v3/keys/device_signing/upload
+- [ ] POST /\_matrix/client/v3/keys/signatures/upload
+- [ ] GET /\_matrix/client/v3/room_keys/keys
+- [ ] PUT /\_matrix/client/v3/room_keys/keys
+- [ ] DELETE /\_matrix/client/v3/room_keys/keys
+- [ ] GET /\_matrix/client/v3/room_keys/keys/{roomId}
+- [ ] PUT /\_matrix/client/v3/room_keys/keys/{roomId}
+- [ ] DELETE /\_matrix/client/v3/room_keys/keys/{roomId}
+- [ ] GET /\_matrix/client/v3/room_keys/keys/{roomId}/{sessionId}
+- [ ] PUT /\_matrix/client/v3/room_keys/keys/{roomId}/{sessionId}
+- [ ] DELETE /\_matrix/client/v3/room_keys/keys/{roomId}/{sessionId}
+- [ ] GET /\_matrix/client/v3/room_keys/version
+- [ ] POST /\_matrix/client/v3/room_keys/version
+- [ ] GET /\_matrix/client/v3/room_keys/version/{version}
+- [ ] PUT /\_matrix/client/v3/room_keys/version/{version}
+- [ ] DELETE /\_matrix/client/v3/room_keys/version/{version}
+- [ ] GET /\_matrix/client/v3/keys/changes
+- [ ] POST /\_matrix/client/v3/keys/claim
+- [ ] POST /\_matrix/client/v3/keys/query
+- [ ] POST /\_matrix/client/v3/keys/upload
+- [ ] GET /\_matrix/client/v3/rooms/{roomId}/context/{eventId}
+- [ ] POST /\_matrix/client/v3/user/{userId}/openid/request_token
+- [ ] GET /\_matrix/client/v3/presence/{userId}/status
+- [ ] PUT /\_matrix/client/v3/presence/{userId}/status
+- [ ] GET /\_matrix/client/v3/pushrules/
+- [ ] GET /\_matrix/client/v3/pushrules/global/
+- [ ] GET /\_matrix/client/v3/pushrules/global/{kind}/{ruleId}
+- [ ] PUT /\_matrix/client/v3/pushrules/global/{kind}/{ruleId}
+- [ ] DELETE /\_matrix/client/v3/pushrules/global/{kind}/{ruleId}
+- [ ] GET /\_matrix/client/v3/pushrules/global/{kind}/{ruleId}/actions
+- [ ] PUT /\_matrix/client/v3/pushrules/global/{kind}/{ruleId}/actions
+- [ ] GET /\_matrix/client/v3/pushrules/global/{kind}/{ruleId}/enabled
+- [ ] PUT /\_matrix/client/v3/pushrules/global/{kind}/{ruleId}/enabled
+- [ ] GET /\_matrix/client/v3/pushers
+- [ ] POST /\_matrix/client/v3/pushers/set
+- [ ] GET /\_matrix/client/v3/notifications
+- [ ] POST /\_matrix/client/v3/rooms/{roomId}/read_markers
+- [ ] POST /\_matrix/client/v3/rooms/{roomId}/receipt/{receiptType}/{eventId}
+- [ ] POST /\_matrix/client/v3/rooms/{roomId}/report
+- [ ] POST /\_matrix/client/v3/rooms/{roomId}/report/{eventId}
+- [ ] POST /\_matrix/client/v3/users/{userId}/report
+- [ ] GET /\_matrix/client/v3/events
+- [ ] GET /\_matrix/client/v3/user/{userId}/rooms/{roomId}/tags
+- [ ] PUT /\_matrix/client/v3/user/{userId}/rooms/{roomId}/tags/{tag}
+- [ ] DELETE /\_matrix/client/v3/user/{userId}/rooms/{roomId}/tags/{tag}
+- [ ] POST /\_matrix/client/v3/rooms/{roomId}/upgrade
+- [ ] PUT /\_matrix/client/v3/sendToDevice/{eventType}/{txnId}
+- [ ] GET /\_matrix/client/v3/admin/whois/{userId}
+- [ ] POST /\_matrix/client/v3/search
+- [ ] GET /\_matrix/client/v1/rooms/{roomId}/hierarchy
+- [ ] GET /\_matrix/client/v3/login/sso/redirect
+- [ ] GET /\_matrix/client/v3/login/sso/redirect/{idpId}
+- [ ] POST /\_matrix/client/v3/rooms/{roomId}/invite
+- [ ] GET /\_matrix/client/v3/thirdparty/location
+- [ ] GET /\_matrix/client/v3/thirdparty/location/{protocol}
+- [ ] GET /\_matrix/client/v3/thirdparty/protocol/{protocol}
+- [ ] GET /\_matrix/client/v3/thirdparty/protocols
+- [ ] GET /\_matrix/client/v3/thirdparty/user
+- [ ] GET /\_matrix/client/v3/thirdparty/user/{protocol}
+- [ ] GET /\_matrix/client/v1/rooms/{roomId}/threads
+- [ ] PUT /\_matrix/client/v3/rooms/{roomId}/typing/{userId}
+- [ ] GET /\_matrix/client/v3/voip/turnServer

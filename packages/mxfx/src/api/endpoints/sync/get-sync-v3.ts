@@ -17,18 +17,14 @@ const optionsSchema = Schema.Struct({
   useStateAfter: Schema.optional(Schema.Boolean).pipe(Schema.fromKey('use_state_after')),
 })
 
-const responseSchema = Schema.Struct({
+export const getSyncV3ResponseSchema = Schema.Struct({
   accountData: Schema.optional(AccountDataSchema).pipe(Schema.fromKey('account_data')),
   deviceLists: Schema.optional(Schema.Any).pipe(Schema.fromKey('device_lists')), //TODO
   deviceOneTimeKeysCount: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Number })).pipe(
     Schema.fromKey('device_one_time_keys_count'),
   ),
   nextBatch: Schema.propertySignature(Schema.String).pipe(Schema.fromKey('next_batch')),
-  presence: Schema.optional(
-    Schema.Struct({
-      events: Schema.Array(BaseEventSchema),
-    }),
-  ),
+  presence: Schema.optional(Schema.Struct({ events: Schema.Array(BaseEventSchema) })),
   rooms: Schema.optional(
     Schema.Struct({
       invite: Schema.optional(
@@ -122,6 +118,6 @@ export const getSyncV3 = (options: typeof optionsSchema.Type) =>
       method: 'GET',
       auth: true,
       params,
-      schema: responseSchema,
+      schema: getSyncV3ResponseSchema,
     })
   })
