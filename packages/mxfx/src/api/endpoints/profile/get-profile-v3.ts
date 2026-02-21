@@ -1,5 +1,5 @@
 import { Effect, Schema } from 'effect'
-import { makeEndpoint } from '../../matrix-endpoint'
+import { apiPath, makeEndpoint } from '../../matrix-endpoint'
 import { MxcUri } from '../../../branded/mxc-uri'
 import { UserId } from '../../../branded/user-id'
 
@@ -22,7 +22,7 @@ const responseSchema = Schema.Struct({
  */
 export const getProfileV3 = ({ userId }: { userId: UserId }) =>
   makeEndpoint({
-    path: `/v3/profile/${encodeURIComponent(userId)}`,
+    path: apiPath()`/v3/profile/${userId}`,
     method: 'GET',
     auth: true,
     schema: responseSchema,

@@ -29,7 +29,14 @@ export class BaseHttpClient extends Effect.Service<BaseHttpClient>()('mxfx/BaseH
             ),
             Effect.andThen(
               content =>
-                new ApiHttpError({ method: res.request.method, url: res.request.url, body: res.request.body, status: res.status, content }),
+                new ApiHttpError({
+                  method: res.request.method,
+                  params: res.request.urlParams,
+                  url: res.request.url,
+                  body: res.request.body,
+                  status: res.status,
+                  content,
+                }),
             ),
             Effect.andThen(Effect.fail),
           ),

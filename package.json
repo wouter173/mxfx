@@ -18,15 +18,16 @@
     "@effect/platform-node": "^0.100.0",
     "@types/node": "^24.10.0",
     "effect": "^3.19.0",
-    "mxfx": "workspace:*"
+    "mxfx": "workspace:*",
+    "nanoid": "^5.1.6"
   },
   "devDependencies": {
-    "prettier-plugin-jsdoc": "^1.8.0",
-    "prettier": "^3.8.1",
-    "@effect/vitest": "^0.27.0",
     "@effect/language-service": "^0.73.1",
+    "@effect/vitest": "^0.27.0",
     "dotenv-cli": "^11.0.0",
     "expo-secure-store": "^15.0.7",
+    "prettier": "^3.8.1",
+    "prettier-plugin-jsdoc": "^1.8.0",
     "tsx": "^4.19.4",
     "typescript": "^5.8.3"
   }

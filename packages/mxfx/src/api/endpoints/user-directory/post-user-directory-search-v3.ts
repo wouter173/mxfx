@@ -1,6 +1,6 @@
 import { Effect, Schema } from 'effect'
 import { nullable } from '../../schema/transform'
-import { makeEndpoint } from '../../matrix-endpoint'
+import { apiPath, makeEndpoint } from '../../matrix-endpoint'
 import { HttpBody } from '@effect/platform'
 import { MxcUri } from '../../../branded/mxc-uri'
 
@@ -36,7 +36,7 @@ export const postUserDirectorySearchV3 = (options: Schema.Schema.Type<typeof opt
     return yield* makeEndpoint({
       auth: true,
       method: 'POST',
-      path: '/v3/user_directory/search',
+      path: apiPath()`/v3/user_directory/search`,
       body,
       schema: responseSchema,
     })

@@ -1,5 +1,5 @@
-import { Effect, Schema } from 'effect'
-import { makeEndpoint } from '../../matrix-endpoint'
+import { Schema } from 'effect'
+import { apiPath, makeEndpoint } from '../../matrix-endpoint'
 
 const responseSchema = Schema.Struct({
   'm.homeserver': Schema.Struct({
@@ -18,7 +18,7 @@ const responseSchema = Schema.Struct({
  */
 export const getDiscoveryInformation = ({ serverName }: { serverName: string }) =>
   makeEndpoint({
-    path: `https://${serverName}/.well-known/matrix/client`,
+    path: apiPath({ encode: false })`https://${serverName}/.well-known/matrix/client`,
     method: 'GET',
     auth: false,
     schema: responseSchema,

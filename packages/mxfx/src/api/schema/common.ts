@@ -4,15 +4,21 @@ import { MxcUri } from '../../branded/mxc-uri'
 import { RoomId } from '../../branded/room-id'
 import { UserId } from '../../branded/user-id'
 
-export const BaseEventSchema = Schema.Struct({
-  type: Schema.String,
-  content: Schema.Object, //TODO EventContent
-})
+export const BaseEventSchema = Schema.Unknown
+// Schema.Union(
+//   Schema.Struct({
+//     type: Schema.String,
+//     content: Schema.Object, //TODO EventContent
+//   }),
+//   Schema.Record({ key: Schema.String, value: Schema.Unknown }),
+// )
 
 //StrippedStateEvent
 
 export const StrippedStateEventSchema = Schema.Struct({
-  ...BaseEventSchema.fields,
+  // ...BaseEventSchema.fields,
+  type: Schema.String,
+  content: Schema.Object, //TODO EventContent
   sender: UserId.schema,
   stateKey: Schema.propertySignature(Schema.String).pipe(Schema.fromKey('state_key')),
 })
@@ -47,7 +53,9 @@ const ClientEventUnsignedFieldSchema = Schema.Struct({
 })
 
 export const ClientEventSchema = Schema.Struct({
-  ...BaseEventSchema.fields,
+  // ...BaseEventSchema.fields,
+  type: Schema.String,
+  content: Schema.Object, //TODO EventContent
   eventId: EventId.schema.pipe(Schema.propertySignature, Schema.fromKey('event_id')),
   originServerTs: Schema.Number.pipe(Schema.int(), Schema.propertySignature, Schema.fromKey('origin_server_ts')),
   roomId: RoomId.schema.pipe(Schema.propertySignature, Schema.fromKey('room_id')),
@@ -181,8 +189,13 @@ export const AccountDataSchema = Schema.Struct({
   events: Schema.Array(BaseEventSchema),
 })
 
+export const RoomMessageEventSchema = Schema.Struct({
+  ...ClientEventWithoutRoomIdSchema.fields,
+  ...RoomMessageEventPartialSchema.fields,
+})
+
 export const TimelineSchema = Schema.Struct({
-  events: Schema.optional(Schema.Array(ClientEventWithoutRoomIdSchema)),
+  events: Schema.optional(Schema.Array(Schema.Union(ClientEventWithoutRoomIdSchema, RoomMessageEventSchema))),
   limited: Schema.optional(Schema.Boolean),
   prevBatch: Schema.String.pipe(Schema.optional, Schema.fromKey('prev_batch')),
 })

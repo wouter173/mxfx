@@ -1,5 +1,5 @@
-import { Effect, Schema } from 'effect'
-import { makeEndpoint } from '../../matrix-endpoint'
+import { Schema } from 'effect'
+import { apiPath, makeEndpoint } from '../../matrix-endpoint'
 
 const booleanCapabilitySchema = Schema.Struct({
   enabled: Schema.Boolean,
@@ -41,7 +41,7 @@ const responseSchema = Schema.Struct({
  */
 export const getCapabilitiesV3 = () =>
   makeEndpoint({
-    path: '/v3/capabilities',
+    path: apiPath()`/v3/capabilities`,
     method: 'GET',
     auth: true,
     schema: responseSchema,

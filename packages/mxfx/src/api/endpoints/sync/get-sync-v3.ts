@@ -1,5 +1,5 @@
 import { Effect, Schema } from 'effect'
-import { makeEndpoint } from '../../matrix-endpoint'
+import { apiPath, makeEndpoint } from '../../matrix-endpoint'
 import { AccountDataSchema, BaseEventSchema, StateSchema, StrippedStateEventSchema, TimelineSchema } from '../../schema/common'
 
 import { HttpBody, UrlParams } from '@effect/platform'
@@ -114,7 +114,7 @@ export const getSyncV3 = (options: typeof optionsSchema.Type) =>
     const params = yield* Schema.encode(optionsSchema)(options)
 
     return yield* makeEndpoint({
-      path: '/v3/sync',
+      path: apiPath()`/v3/sync`,
       method: 'GET',
       auth: true,
       params,

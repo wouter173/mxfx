@@ -1,18 +1,13 @@
 import { HttpBody } from '@effect/platform'
 import { Effect, Schema } from 'effect'
-import { makeEndpoint } from '../../matrix-endpoint'
+import { apiPath, makeEndpoint } from '../../matrix-endpoint'
 import { DiscoveryInformationResponseSchema } from '../../schema/rest'
-
-const commonOptionsSchema = Schema.Struct({
-  initialDeviceDisplayName: Schema.optional(Schema.String).pipe(Schema.fromKey('initial_device_display_name')),
-  refreshToken: Schema.optional(Schema.Boolean).pipe(Schema.fromKey('refresh_token')),
-})
 
 const optionsSchema = Schema.Union(
   Schema.Struct({
     type: Schema.Literal('m.login.token'),
     token: Schema.String,
-  }).pipe(Schema.extend(commonOptionsSchema)),
+  }),
   Schema.Struct({
     type: Schema.Literal('m.login.password'),
     password: Schema.String,
@@ -20,7 +15,14 @@ const optionsSchema = Schema.Union(
       Schema.Struct({ type: Schema.Literal('m.id.user'), user: Schema.String }),
       Schema.Record({ key: Schema.String, value: Schema.Unknown }),
     ),
-  }).pipe(Schema.extend(commonOptionsSchema)),
+  }),
+).pipe(
+  Schema.extend(
+    Schema.Struct({
+      initialDeviceDisplayName: Schema.optional(Schema.String).pipe(Schema.fromKey('initial_device_display_name')),
+      refreshToken: Schema.optional(Schema.Boolean).pipe(Schema.fromKey('refresh_token')),
+    }),
+  ),
 )
 
 const responseSchema = Schema.Struct({
@@ -46,7 +48,7 @@ export const postLoginV3 = (options: Schema.Schema.Type<typeof optionsSchema>) =
     return yield* makeEndpoint({
       auth: false,
       method: 'POST',
-      path: '/v3/login',
+      path: apiPath()`/v3/login`,
       body,
       schema: responseSchema,
     })

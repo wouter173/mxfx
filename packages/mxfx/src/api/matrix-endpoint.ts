@@ -3,7 +3,7 @@ import { Effect, ParseResult, Schema } from 'effect'
 import type { ParseError } from 'effect/ParseResult'
 
 export type MatrixEndpoint<A = void, I = unknown, R = never> = {
-  path: string
+  path: typeof pathBrandSchema.Type
   auth: boolean
   params?: UrlParams.Input
   schema: Schema.Schema<A, I, R>
@@ -27,3 +27,20 @@ export const makeHttpRequest = <A, I, R>(endpoint: MatrixEndpoint<A, I, R>) =>
 
 export const parseHttpResponse = <A, I, R>(endpoint: MatrixEndpoint<A, I, R>) =>
   HttpClientResponse.schemaBodyJson(endpoint.schema || Schema.Unknown)
+
+export const pathBrandSymbol: unique symbol = Symbol('mxfx/api/path')
+export const pathBrandSchema = Schema.String.pipe(Schema.brand(pathBrandSymbol))
+
+export const apiPath = (options?: { encode?: boolean }) => {
+  const encode = options?.encode ?? true
+
+  return (strings: TemplateStringsArray, ...values: readonly (string | number)[]): typeof pathBrandSchema.Type => {
+    const path = strings.reduce((result, str, i) => {
+      const value = values[i]
+      const encodedValue = value ? (encode ? encodeURIComponent(value) : value) : ''
+      return result + (str ?? '') + encodedValue
+    }, '')
+
+    return Schema.decodeSync(pathBrandSchema)(path)
+  }
+}
