@@ -4,6 +4,15 @@ import { MatrixConfig } from 'mxfx'
 import { MatrixApi, endpoints } from 'mxfx/api'
 import { InMemoryVault, Vault } from 'mxfx/vault'
 import { RoomId, UserId } from 'mxfx/branded'
+import type { ClientEventWithoutRoomIdSchema, RoomMessageEventSchema } from '../packages/mxfx/src/api/schema/common'
+
+function typedEntries<T extends Record<string, any>>(obj: T): { [K in keyof T]: [K, T[K]] }[keyof T][] {
+  return Object.entries(obj) as any
+}
+
+function isRoomMessageEvent(event: typeof ClientEventWithoutRoomIdSchema.Type): event is typeof RoomMessageEventSchema.Type {
+  return event.type === 'm.room.message'
+}
 
 const program = Effect.gen(function* () {
   const matrixUserName = yield* Config.string('MATRIX_USER_NAME')
@@ -30,16 +39,11 @@ const program = Effect.gen(function* () {
       .pipe(Effect.andThen(matrixApi.execute))
 
     yield* vault.setItem('accessToken', loginResult.accessToken)
+    yield* Effect.log('Login successful, access token stored in vault', loginResult.accessToken)
   }
 
   const y = yield* endpoints.getProfileV3({ userId }).pipe(Effect.andThen(matrixApi.execute))
   yield* Effect.log(`Logged in as user ID: ${userId} with profile: ${JSON.stringify(y)}`)
-
-  // yield* matrixApi
-  //   .execute(endpoints.getCapabilitiesV3())
-  //   .pipe(Effect.tap(capabilities => Effect.log(`Server Capabilities: ${JSON.stringify(capabilities)}`)))
-
-  // const users = yield* matrixApi.execute(postUserDirectorySearchV3({ searchTerm: 'wo', limit: 100 }))
 
   const syncHub = yield* PubSub.unbounded<typeof endpoints.getSyncV3ResponseSchema.Type>()
 
@@ -51,33 +55,39 @@ const program = Effect.gen(function* () {
   yield* Stream.fromPubSub(syncHub).pipe(
     Stream.filterMap(sync => Option.fromNullable(sync.rooms?.invite)),
     Stream.mapConcat(invites => Object.entries(invites)),
-    // Stream.tap(([roomId, invite]) => Effect.log(`Received invite for room ${roomId}: ${JSON.stringify(invite)}`)),
-    Stream.map(([roomId, invite]) => ({
-      invite,
-      roomId,
-      joinRules: Option.fromNullable(invite.inviteState?.events.find(e => e.type === 'm.room.join_rules')),
-    })),
-    Stream.filterEffect(({ joinRules, roomId }) =>
-      Effect.gen(function* () {
-        if (Option.isNone(joinRules)) {
-          yield* Effect.log(`No join rules found for invite to room ${roomId}, skipping...`)
-          return false
-        }
-        const isJoinable = ['public', 'invite', 'knock'].includes(joinRules.value.content.join_rule)
-        if (!isJoinable) {
-          yield* Effect.log(`Invite to room ${roomId} is not public, skipping... Join rule: ${joinRules.value.content.join_rule}`)
-        }
-        return isJoinable
-      }),
-    ),
-    Stream.tap(({ invite, roomId }) =>
-      Effect.log(`Received joinable invite for room ${roomId}, joining... Invite content: ${JSON.stringify(invite)}`),
-    ),
-    Stream.runForEach(({ roomId }) =>
+    Stream.runForEach(([roomId]) =>
       RoomId.make(roomId).pipe(
         Effect.andThen(roomId => endpoints.postRoomsJoinV3({ roomId })),
         Effect.andThen(matrixApi.execute),
+        Effect.andThen(() => Effect.log(`Joined room ${roomId} that we were invited to`)),
+        Effect.catchAll(err => Effect.logError(`Failed to join room ${roomId}: ${err}`)),
       ),
+    ),
+    Effect.fork,
+  )
+
+  yield* Stream.fromPubSub(syncHub).pipe(
+    Stream.filterMap(sync => Option.fromNullable(sync.rooms?.join)),
+    Stream.mapConcat(joinedRooms => typedEntries(joinedRooms)),
+    Stream.filterMap(([roomId, roomData]) =>
+      Option.fromNullable(roomData.timeline?.events).pipe(Option.map(events => ({ roomId, events }))),
+    ),
+    Stream.mapConcat(({ roomId, events }) => events.map(event => ({ roomId, event }))),
+    Stream.filterMap(({ roomId, event }) => Option.liftPredicate(isRoomMessageEvent)(event).pipe(Option.map(event => ({ roomId, event })))),
+    Stream.runForEach(({ roomId, event }) =>
+      Effect.gen(function* () {
+        yield* Effect.log(`Received message ${event.content.body} in room ${roomId}: ${JSON.stringify(event)}`)
+        if (event.content.body === '!ping') {
+          const responseContent = { msgtype: 'm.text', body: 'Pinging...' }
+          yield* endpoints
+            .putRoomsSendV3({ roomId, content: responseContent, eventType: 'm.room.message' })
+            .pipe(Effect.andThen(matrixApi.execute))
+          const pingMs = Date.now() - event.originServerTs
+          yield* endpoints
+            .putRoomsSendV3({ roomId, content: { msgtype: 'm.text', body: `Pong! 🏓 ${pingMs}ms` }, eventType: 'm.room.message' })
+            .pipe(Effect.andThen(matrixApi.execute))
+        }
+      }),
     ),
     Effect.fork,
   )
@@ -91,6 +101,7 @@ const program = Effect.gen(function* () {
             timeout: Duration.seconds(30),
             since: nextBatch.pipe(Option.getOrUndefined),
             fullState: nextBatch.pipe(Option.isNone),
+            filter: nextBatch.pipe(Option.match({ onNone: () => '{"room":{"timeline":{"limit":0}}}', onSome: () => undefined })),
           })
           .pipe(
             Effect.andThen(matrixApi.execute),
