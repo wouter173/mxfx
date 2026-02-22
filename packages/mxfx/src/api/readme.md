@@ -20,7 +20,6 @@ Endpoints:
 - [ ] POST /\_matrix/client/v3/account/deactivate
 - [ ] GET /\_matrix/client/v1/auth_metadata
 - [ ] GET /\_matrix/client/v3/account/3pid
-- [ ] POST /\_matrix/client/v3/account/3pid (deprecated)
 - [ ] POST /\_matrix/client/v3/account/3pid/add
 - [ ] POST /\_matrix/client/v3/account/3pid/bind
 - [ ] POST /\_matrix/client/v3/account/3pid/delete
@@ -32,9 +31,6 @@ Endpoints:
 - [ ] POST /\_matrix/client/v3/user/{userId}/filter
 - [ ] GET /\_matrix/client/v3/user/{userId}/filter/{filterId}
 - [x] GET /\_matrix/client/v3/sync
-- [ ] GET /\_matrix/client/v3/events (deprecated)
-- [ ] GET /\_matrix/client/v3/events/{eventId} (deprecated)
-- [ ] GET /\_matrix/client/v3/initialSync (deprecated)
 - [ ] GET /\_matrix/client/v3/rooms/{roomId}/event/{eventId}
 - [ ] GET /\_matrix/client/v3/rooms/{roomId}/joined_members
 - [ ] GET /\_matrix/client/v3/rooms/{roomId}/members
@@ -44,7 +40,7 @@ Endpoints:
 - [ ] GET /\_matrix/client/v1/rooms/{roomId}/timestamp_to_event
 - [ ] GET /\_matrix/client/v3/rooms/{roomId}/initialSync
 - [ ] PUT /\_matrix/client/v3/rooms/{roomId}/state/{eventType}/{stateKey}
-- [ ] PUT /\_matrix/client/v3/rooms/{roomId}/send/{eventType}/{txnId}
+- [x] PUT /\_matrix/client/v3/rooms/{roomId}/send/{eventType}/{txnId}
 - [ ] PUT /\_matrix/client/v3/rooms/{roomId}/redact/{eventId}/{txnId}
 - [ ] GET /\_matrix/client/v1/rooms/{roomId}/relations/{eventId}
 - [ ] GET /\_matrix/client/v1/rooms/{roomId}/relations/{eventId}/{relType}
@@ -84,11 +80,6 @@ Endpoints:
 - [ ] GET /\_matrix/client/v1/media/preview_url
 - [ ] GET /\_matrix/client/v1/media/thumbnail/{serverName}/{mediaId}
 - [ ] POST /\_matrix/media/v1/create
-- [ ] GET /\_matrix/media/v3/config (deprecated)
-- [ ] GET /\_matrix/media/v3/download/{serverName}/{mediaId} (deprecated)
-- [ ] GET /\_matrix/media/v3/download/{serverName}/{mediaId}/{fileName} (deprecated)
-- [ ] GET /\_matrix/media/v3/preview_url (deprecated)
-- [ ] GET /\_matrix/media/v3/thumbnail/{serverName}/{mediaId} (deprecated)
 - [ ] POST /\_matrix/media/v3/upload
 - [ ] PUT /\_matrix/media/v3/upload/{serverName}/{mediaId}
 - [ ] POST /\_matrix/client/v3/delete_devices

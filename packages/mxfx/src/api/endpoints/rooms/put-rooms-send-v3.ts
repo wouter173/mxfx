@@ -1,17 +1,36 @@
 import { Effect, Schema } from 'effect'
 import { makeEndpoint, apiPath } from '../../matrix-endpoint'
-import { RoomId } from '../../../branded'
+import { EventId, RoomId } from '../../../branded'
 import { HttpBody } from '@effect/platform'
 
 const responseSchema = Schema.Struct({
-  eventId: Schema.propertySignature(Schema.String).pipe(Schema.fromKey('event_id')),
+  eventId: EventId.schema.pipe(Schema.propertySignature, Schema.fromKey('event_id')),
 })
 
 const optionsSchema = Schema.Union(
   //TODO: support more event types
   Schema.Struct({
     eventType: Schema.Literal('m.room.message'),
-    content: Schema.Struct({ body: Schema.String, msgtype: Schema.String }),
+    content: Schema.Struct({
+      body: Schema.String,
+      msgtype: Schema.String,
+    }).pipe(
+      Schema.extend(
+        Schema.Union(
+          Schema.Struct({
+            'm.newContent': Schema.Struct({ body: Schema.String, msgtype: Schema.String }).pipe(
+              Schema.propertySignature,
+              Schema.fromKey('m.new_content'),
+            ),
+            'm.relatesTo': Schema.Struct({
+              relType: Schema.Literal('m.replace').pipe(Schema.propertySignature, Schema.fromKey('rel_type')),
+              eventId: EventId.schema.pipe(Schema.propertySignature, Schema.fromKey('event_id')),
+            }).pipe(Schema.propertySignature, Schema.fromKey('m.relates_to')),
+          }),
+          Schema.Struct({}),
+        ),
+      ),
+    ),
   }),
 ).pipe(
   Schema.extend(

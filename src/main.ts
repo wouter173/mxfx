@@ -79,12 +79,21 @@ const program = Effect.gen(function* () {
         yield* Effect.log(`Received message ${event.content.body} in room ${roomId}: ${JSON.stringify(event)}`)
         if (event.content.body === '!ping') {
           const responseContent = { msgtype: 'm.text', body: 'Pinging...' }
-          yield* endpoints
+          const { eventId } = yield* endpoints
             .putRoomsSendV3({ roomId, content: responseContent, eventType: 'm.room.message' })
             .pipe(Effect.andThen(matrixApi.execute))
           const pingMs = Date.now() - event.originServerTs
           yield* endpoints
-            .putRoomsSendV3({ roomId, content: { msgtype: 'm.text', body: `Pong! 🏓 ${pingMs}ms` }, eventType: 'm.room.message' })
+            .putRoomsSendV3({
+              roomId,
+              content: {
+                msgtype: 'm.text',
+                body: `* Pong! 🏓 ${pingMs}ms`,
+                'm.newContent': { msgtype: 'm.text', body: `Pong! 🏓 ${pingMs}ms` },
+                'm.relatesTo': { relType: 'm.replace', eventId },
+              },
+              eventType: 'm.room.message',
+            })
             .pipe(Effect.andThen(matrixApi.execute))
         }
       }),
