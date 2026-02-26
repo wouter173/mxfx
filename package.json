@@ -14,6 +14,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@effect/experimental": "^0.57.0",
     "@effect/platform": "^0.93.0",
     "@effect/platform-node": "^0.100.0",
     "@types/node": "^24.10.0",

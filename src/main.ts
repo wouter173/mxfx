@@ -5,6 +5,7 @@ import { MatrixApi, endpoints } from 'mxfx/api'
 import { InMemoryVault, Vault } from 'mxfx/vault'
 import { RoomId, UserId } from 'mxfx/branded'
 import type { ClientEventWithoutRoomIdSchema, RoomMessageEventSchema } from '../packages/mxfx/src/api/schema/common'
+import { DevTools } from '@effect/experimental'
 
 function typedEntries<T extends Record<string, any>>(obj: T): { [K in keyof T]: [K, T[K]] }[keyof T][] {
   return Object.entries(obj) as any
@@ -74,8 +75,8 @@ const program = Effect.gen(function* () {
     ),
     Stream.mapConcat(({ roomId, events }) => events.map(event => ({ roomId, event }))),
     Stream.filterMap(({ roomId, event }) => Option.liftPredicate(isRoomMessageEvent)(event).pipe(Option.map(event => ({ roomId, event })))),
-    Stream.runForEach(({ roomId, event }) =>
-      Effect.gen(function* () {
+    Stream.runForEach(
+      Effect.fn('handleRoomMessage')(function* ({ roomId, event }) {
         yield* Effect.log(`Received message ${event.content.body} in room ${roomId}: ${JSON.stringify(event)}`)
         if (event.content.body === '!ping') {
           const responseContent = { msgtype: 'm.text', body: 'Pinging...' }
@@ -126,6 +127,7 @@ const program = Effect.gen(function* () {
 })
 
 const mxfxLive = MatrixApi.Default.pipe(
+  Layer.provideMerge(DevTools.layer()),
   Layer.provideMerge(InMemoryVault.layerConfig({ values: { accessToken: Config.string('MATRIX_ACCESS_TOKEN') } })),
   Layer.provideMerge(MatrixConfig.layerConfig({ serverName: Config.string('MATRIX_HOME_SERVER') })),
   Layer.provide(NodeHttpClient.layer),
