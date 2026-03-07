@@ -8,6 +8,7 @@ describe('branded', () => {
     Effect.gen(function* () {
       expect(yield* RoomId.make('!roomid:matrix.org')).toBe('!roomid:matrix.org')
       expect(yield* RoomId.make('!anotherRoomId:example.com')).toBe('!anotherRoomId:example.com')
+      expect(yield* RoomId.make('!roomid')).toBe('!roomid')
     }),
   )
 
@@ -16,7 +17,6 @@ describe('branded', () => {
       expect(Exit.isFailure(yield* Effect.exit(RoomId.make('!:matrix.org')))).toBeTruthy()
       expect(Exit.isFailure(yield* Effect.exit(RoomId.make('!roomid:')))).toBeTruthy()
       expect(Exit.isFailure(yield* Effect.exit(RoomId.make('roomid:matrix.org')))).toBeTruthy()
-      expect(Exit.isFailure(yield* Effect.exit(RoomId.make('!roomid')))).toBeTruthy()
     }),
   )
 })
