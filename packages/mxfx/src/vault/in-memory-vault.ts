@@ -16,7 +16,7 @@ const make = ({ values = {} }: MakeOpts = {}) =>
           storage.set(key, value)
         }),
 
-      getItem: (key: string) => Effect.sync(() => Option.fromNullable(storage.get(key))),
+      getItem: (key: string) => Effect.sync(() => Option.fromNullishOr(storage.get(key))),
 
       deleteItem: (key: string) =>
         Effect.sync(() => {
@@ -29,5 +29,5 @@ const make = ({ values = {} }: MakeOpts = {}) =>
 
 export const layer = Layer.effect(Vault, make())
 export const layerDefault = (opts: MakeOpts) => Layer.effect(Vault, make(opts))
-export const layerConfig = (optsConfig: Config.Config.Wrap<MakeOpts>) =>
-  Layer.effect(Vault, Effect.flatMap(Config.unwrap(optsConfig), make))
+export const layerConfig = (optsConfig: Config.Wrap<MakeOpts>) =>
+  Layer.effect(Vault, Effect.andThen(Config.unwrap(optsConfig).asEffect(), make))

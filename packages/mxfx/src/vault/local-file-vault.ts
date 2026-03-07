@@ -1,5 +1,4 @@
-import { Effect, Layer, Option } from 'effect'
-import { FileSystem, Path } from '@effect/platform'
+import { Effect, FileSystem, Layer, Option, Path } from 'effect'
 import { Vault, VaultError } from './vault'
 
 export type MakeOpts = {
@@ -13,7 +12,7 @@ export const make = (config: MakeOpts) =>
     let cache: Map<string, string> | null = null
 
     const ensureDir = fs.makeDirectory(path.dirname(config.filePath), { recursive: true }).pipe(
-      Effect.catchAll(() => Effect.void),
+      Effect.catch(() => Effect.void),
       Effect.mapError(cause => new VaultError({ message: 'Failed to create vault directory', cause })),
     )
 
@@ -29,7 +28,7 @@ export const make = (config: MakeOpts) =>
       return new Map<string, string>(Object.entries(parsed))
     }).pipe(
       Effect.mapError(cause => new VaultError({ message: 'Failed to load vault', cause })),
-      Effect.catchAll(() => Effect.succeed(new Map<string, string>())),
+      Effect.catch(() => Effect.succeed(new Map<string, string>())),
     )
 
     const save = (data: Map<string, string>) =>
@@ -59,7 +58,7 @@ export const make = (config: MakeOpts) =>
       getItem: (key: string) =>
         Effect.gen(function* () {
           const storage = yield* getCache
-          return Option.fromNullable(storage.get(key))
+          return Option.fromNullishOr(storage.get(key))
         }),
 
       deleteItem: (key: string) =>

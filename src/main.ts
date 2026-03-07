@@ -5,7 +5,7 @@ import { MatrixApi, endpoints } from 'mxfx/api'
 import { InMemoryVault, Vault } from 'mxfx/vault'
 import { RoomId, UserId } from 'mxfx/branded'
 import type { ClientEventWithoutRoomIdSchema, RoomMessageEventSchema } from '../packages/mxfx/src/api/schema/common'
-import { DevTools } from '@effect/experimental'
+import { DevTools } from 'effect/unstable/devtools'
 
 function typedEntries<T extends Record<string, any>>(obj: T): { [K in keyof T]: [K, T[K]] }[keyof T][] {
   return Object.entries(obj) as any
@@ -126,11 +126,11 @@ const program = Effect.gen(function* () {
   yield* syncLoopFiber.await
 })
 
-const mxfxLive = MatrixApi.Default.pipe(
+const mxfxLive = MatrixApi.layer.pipe(
   Layer.provideMerge(DevTools.layer()),
   Layer.provideMerge(InMemoryVault.layerConfig({ values: { accessToken: Config.string('MATRIX_ACCESS_TOKEN') } })),
   Layer.provideMerge(MatrixConfig.layerConfig({ serverName: Config.string('MATRIX_HOME_SERVER') })),
-  Layer.provide(NodeHttpClient.layer),
+  Layer.provide(NodeHttpClient.layerUndici),
 )
 
-NodeRuntime.runMain(program.pipe(Effect.scoped, Effect.provide(mxfxLive), Logger.withMinimumLogLevel(LogLevel.Debug)))
+NodeRuntime.runMain(program.pipe(Effect.scoped, Effect.provide(mxfxLive)))

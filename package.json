@@ -14,17 +14,16 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@effect/experimental": "^0.57.0",
-    "@effect/platform": "^0.93.0",
-    "@effect/platform-node": "^0.100.0",
+    "@effect/platform-node": "4.0.0-beta.17",
     "@types/node": "^24.10.0",
-    "effect": "^3.19.0",
+    "effect": "4.0.0-beta.17",
     "mxfx": "workspace:*",
     "nanoid": "^5.1.6"
   },
   "devDependencies": {
-    "@effect/language-service": "^0.73.1",
-    "@effect/vitest": "^0.27.0",
+    "@effect/language-service": "^0.76.0",
+    "@effect/vitest": "4.0.0-beta.17",
+    "vitest": "^3.0.0",
     "dotenv-cli": "^11.0.0",
     "expo-secure-store": "^15.0.7",
     "prettier": "^3.8.1",
