@@ -1,12 +1,11 @@
-import { HttpBody, HttpClientRequest, HttpClientResponse, UrlParams } from '@effect/platform'
-import { Effect, ParseResult, Schema } from 'effect'
-import type { ParseError } from 'effect/ParseResult'
+import { HttpBody, HttpClientRequest, HttpClientResponse, UrlParams } from 'effect/unstable/http'
+import { Effect, Schema } from 'effect'
 
-export type MatrixEndpoint<A = void, I = unknown, R = never> = {
+export type MatrixEndpoint<T> = {
   path: typeof pathBrandSchema.Type
   auth: boolean
   params?: UrlParams.Input
-  schema: Schema.Schema<A, I, R>
+  schema: Schema.Schema<T>
 } & (
   | { method: 'GET'; body?: undefined }
   | {
@@ -15,9 +14,9 @@ export type MatrixEndpoint<A = void, I = unknown, R = never> = {
     }
 )
 
-export const makeEndpoint = <A, I, R>(endpoint: MatrixEndpoint<A, I, R>) => Effect.succeed(endpoint)
+export const makeEndpoint = <T>(endpoint: MatrixEndpoint<T>) => Effect.succeed(endpoint)
 
-export const makeHttpRequest = <A, I, R>(endpoint: MatrixEndpoint<A, I, R>) =>
+export const makeHttpRequest = <T>(endpoint: MatrixEndpoint<T>) =>
   Effect.gen(function* () {
     return HttpClientRequest.make(endpoint.method)(endpoint.path, {
       body: endpoint.body ? endpoint.body : HttpBody.empty,
@@ -25,11 +24,9 @@ export const makeHttpRequest = <A, I, R>(endpoint: MatrixEndpoint<A, I, R>) =>
     })
   })
 
-export const parseHttpResponse = <A, I, R>(endpoint: MatrixEndpoint<A, I, R>) =>
-  HttpClientResponse.schemaBodyJson(endpoint.schema || Schema.Unknown)
+export const parseHttpResponse = <T>(endpoint: MatrixEndpoint<T>) => HttpClientResponse.schemaBodyJson(endpoint.schema || Schema.Unknown)
 
-export const pathBrandSymbol: unique symbol = Symbol('mxfx/api/path')
-export const pathBrandSchema = Schema.String.pipe(Schema.brand(pathBrandSymbol))
+export const pathBrandSchema = Schema.String.pipe(Schema.brand('mxfx/api/path'))
 
 export const apiPath = (options?: { encode?: boolean }) => {
   const encode = options?.encode ?? true

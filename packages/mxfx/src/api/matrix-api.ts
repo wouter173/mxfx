@@ -1,20 +1,20 @@
-import { Effect } from 'effect'
+import { Effect, Layer, ServiceMap } from 'effect'
 import { ApiHttpClient, AuthHttpClient } from './http-client'
 import { makeHttpRequest, parseHttpResponse, type MatrixEndpoint } from './matrix-endpoint'
 
-export class MatrixApi extends Effect.Service<MatrixApi>()('mxfxMatrixApi', {
-  effect: Effect.gen(function* () {
-    const authHttpClient = yield* AuthHttpClient
-    const apiHttpClient = yield* ApiHttpClient
+const make = Effect.gen(function* () {
+  const authHttpClient = yield* AuthHttpClient.AuthHttpClient
+  const apiHttpClient = yield* ApiHttpClient.ApiHttpClient
 
-    return {
-      execute: <A, I, R>(endpoint: MatrixEndpoint<A, I, R>) =>
-        Effect.gen(function* () {
-          const client = endpoint.auth ? authHttpClient : apiHttpClient
-          const request = yield* makeHttpRequest(endpoint)
-          return yield* client.execute(request).pipe(Effect.andThen(parseHttpResponse(endpoint)))
-        }),
-    }
-  }),
-  dependencies: [AuthHttpClient.Default, ApiHttpClient.Default],
-}) {}
+  return {
+    execute: <A>(endpoint: MatrixEndpoint<A>) =>
+      Effect.gen(function* () {
+        const client = endpoint.auth ? authHttpClient : apiHttpClient
+        const request = yield* makeHttpRequest(endpoint)
+        return yield* client.execute(request).pipe(Effect.andThen(parseHttpResponse(endpoint)))
+      }),
+  }
+})
+
+export class MatrixApi extends ServiceMap.Service<MatrixApi>()('mxfxMatrixApi', { make }) {}
+export const layer = Layer.effect(MatrixApi, make).pipe(Layer.provide(ApiHttpClient.layer), Layer.provide(AuthHttpClient.layer))
