@@ -1,102 +1,90 @@
 import { Effect, Schema } from 'effect'
-import { apiPath, makeEndpoint } from '../../matrix-endpoint'
-import { AccountDataSchema, BaseEventSchema, StateSchema, StrippedStateEventSchema, TimelineSchema } from '../../schema/common'
-
-import { HttpBody, UrlParams } from '@effect/platform'
+import { apiPath, makeEndpoint } from '../helpers'
+import { AccountData, BaseEvent, StateSchema, StrippedStateEvent, Timeline } from '../../schema/common'
 import { RoomId } from '../../../branded/room-id'
 import { EventId } from '../../../branded/event-id'
 
-const presenceSchema = Schema.Union(Schema.Literal('online'), Schema.Literal('offline'), Schema.Literal('unavailable'))
+const presenceSchema = Schema.Union([Schema.Literal('online'), Schema.Literal('offline'), Schema.Literal('unavailable')])
 
 const optionsSchema = Schema.Struct({
   filter: Schema.optional(Schema.String),
-  fullState: Schema.optional(Schema.Boolean).pipe(Schema.fromKey('full_state')),
-  setPresence: Schema.optional(presenceSchema).pipe(Schema.fromKey('set_presence')),
+  fullState: Schema.optional(Schema.Boolean),
+  setPresence: Schema.optional(presenceSchema),
   since: Schema.optional(Schema.String),
   timeout: Schema.optional(Schema.DurationFromMillis),
-  useStateAfter: Schema.optional(Schema.Boolean).pipe(Schema.fromKey('use_state_after')),
+  useStateAfter: Schema.optional(Schema.Boolean),
 })
 
 export const getSyncV3ResponseSchema = Schema.Struct({
-  accountData: Schema.optional(AccountDataSchema).pipe(Schema.fromKey('account_data')),
-  deviceLists: Schema.optional(Schema.Any).pipe(Schema.fromKey('device_lists')), //TODO
-  deviceOneTimeKeysCount: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Number })).pipe(
-    Schema.fromKey('device_one_time_keys_count'),
-  ),
-  nextBatch: Schema.propertySignature(Schema.String).pipe(Schema.fromKey('next_batch')),
-  presence: Schema.optional(Schema.Struct({ events: Schema.Array(BaseEventSchema) })),
+  accountData: Schema.optional(AccountData),
+  deviceLists: Schema.optional(Schema.Any), //TODO
+  deviceOneTimeKeysCount: Schema.optional(Schema.Record(Schema.String, Schema.Number)),
+  nextBatch: Schema.String,
+  presence: Schema.optional(Schema.Struct({ events: Schema.Array(BaseEvent) })),
   rooms: Schema.optional(
     Schema.Struct({
       invite: Schema.optional(
-        Schema.Record({
-          key: RoomId.schema,
-          value: Schema.Struct({
-            inviteState: Schema.optional(Schema.Struct({ events: Schema.Array(StrippedStateEventSchema) })).pipe(
-              Schema.fromKey('invite_state'),
-            ),
+        Schema.Record(
+          RoomId.schema,
+          Schema.Struct({
+            inviteState: Schema.optional(Schema.Struct({ events: Schema.Array(StrippedStateEvent) })),
           }),
-        }),
+        ),
       ),
       join: Schema.optional(
-        Schema.Record({
-          key: RoomId.schema,
-          value: Schema.Struct({
-            accountData: Schema.optional(AccountDataSchema).pipe(Schema.fromKey('account_data')),
-            ephemeral: Schema.optional(Schema.Struct({ events: Schema.Array(BaseEventSchema) })), //TODO
+        Schema.Record(
+          RoomId.schema,
+          Schema.Struct({
+            accountData: Schema.optional(AccountData),
+            ephemeral: Schema.optional(Schema.Struct({ events: Schema.Array(BaseEvent) })), //TODO
             state: Schema.optional(StateSchema),
             summary: Schema.optional(
               Schema.Struct({
-                mHeroes: Schema.optional(Schema.Array(Schema.String)).pipe(Schema.fromKey('m.heroes')),
-                mInvitedMemberCount: Schema.optional(Schema.Number.pipe(Schema.int())).pipe(Schema.fromKey('m.invited_member_count')),
-                mJoinedMemberCount: Schema.optional(Schema.Number.pipe(Schema.int())).pipe(Schema.fromKey('m.joined_member_count')),
+                'm.heroes': Schema.optional(Schema.Array(Schema.String)),
+                'm.invitedMemberCount': Schema.optional(Schema.Int),
+                'm.joinedMemberCount': Schema.optional(Schema.Int),
               }),
             ),
-            timeline: Schema.optional(TimelineSchema),
+            timeline: Schema.optional(Timeline),
             unreadNotifications: Schema.optional(
               Schema.Struct({
-                highlightCount: Schema.propertySignature(Schema.Number.pipe(Schema.int())).pipe(Schema.fromKey('highlight_count')),
-                notificationCount: Schema.propertySignature(Schema.Number.pipe(Schema.int())).pipe(Schema.fromKey('notification_count')),
+                highlightCount: Schema.Int,
+                notificationCount: Schema.Int,
               }),
-            ).pipe(Schema.fromKey('unread_notifications')),
+            ),
             unreadThreadNotifications: Schema.optional(
-              Schema.Record({
-                key: EventId.schema,
-                value: Schema.Struct({
-                  highlightCount: Schema.optional(Schema.Number.pipe(Schema.int())).pipe(Schema.fromKey('highlight_count')),
-                  notificationCount: Schema.optional(Schema.Number.pipe(Schema.int())).pipe(Schema.fromKey('notification_count')),
+              Schema.Record(
+                EventId.schema,
+                Schema.Struct({
+                  highlightCount: Schema.optional(Schema.Int),
+                  notificationCount: Schema.optional(Schema.Int),
                 }),
-              }),
-            ).pipe(Schema.fromKey('unread_thread_notifications')),
-          }),
-        }),
-      ),
-      knock: Schema.optional(
-        Schema.Record({
-          key: RoomId.schema,
-          value: Schema.Struct({
-            knockState: Schema.optional(Schema.Struct({ events: Schema.Array(StrippedStateEventSchema) })).pipe(
-              Schema.fromKey('knock_state'),
+              ),
             ),
           }),
-        }),
+        ),
+      ),
+      knock: Schema.optional(
+        Schema.Record(
+          RoomId.schema,
+          Schema.Struct({
+            knockState: Schema.optional(Schema.Struct({ events: Schema.Array(StrippedStateEvent) })),
+          }),
+        ),
       ),
       leave: Schema.optional(
-        Schema.Record({
-          key: RoomId.schema,
-          value: Schema.Struct({
-            accountData: Schema.optional(AccountDataSchema).pipe(Schema.fromKey('account_data')),
+        Schema.Record(
+          RoomId.schema,
+          Schema.Struct({
+            accountData: Schema.optional(AccountData),
             state: Schema.optional(StateSchema),
-            timeline: Schema.optional(TimelineSchema),
+            timeline: Schema.optional(Timeline),
           }),
-        }),
+        ),
       ), //TODO
     }),
   ),
-  toDevice: Schema.optional(
-    Schema.Struct({
-      events: Schema.Array(BaseEventSchema),
-    }),
-  ).pipe(Schema.fromKey('to_device')),
+  toDevice: Schema.optional(Schema.Struct({ events: Schema.Array(BaseEvent) })),
 })
 
 /**
@@ -111,7 +99,7 @@ export const getSyncV3ResponseSchema = Schema.Struct({
  */
 export const getSyncV3 = (options: typeof optionsSchema.Type) =>
   Effect.gen(function* () {
-    const params = yield* Schema.encode(optionsSchema)(options)
+    const params = yield* Schema.encodeEffect(optionsSchema)(options)
 
     return yield* makeEndpoint({
       path: apiPath()`/v3/sync`,

@@ -1,11 +1,12 @@
 import { HttpBody, HttpClientRequest, HttpClientResponse, UrlParams } from 'effect/unstable/http'
 import { Effect, Schema } from 'effect'
+import { encodeSnakeCaseSchema } from '../schema/encode-case'
 
-export type MatrixEndpoint<T> = {
+export type MatrixEndpoint<S extends Schema.Top> = {
   path: typeof pathBrandSchema.Type
   auth: boolean
   params?: UrlParams.Input
-  schema: Schema.Schema<T>
+  schema: S
 } & (
   | { method: 'GET'; body?: undefined }
   | {
@@ -14,9 +15,9 @@ export type MatrixEndpoint<T> = {
     }
 )
 
-export const makeEndpoint = <T>(endpoint: MatrixEndpoint<T>) => Effect.succeed(endpoint)
+export const makeEndpoint = <S extends Schema.Top>(endpoint: MatrixEndpoint<S>) => Effect.succeed(endpoint)
 
-export const makeHttpRequest = <T>(endpoint: MatrixEndpoint<T>) =>
+export const makeHttpRequest = <S extends Schema.Top>(endpoint: MatrixEndpoint<S>) =>
   Effect.gen(function* () {
     return HttpClientRequest.make(endpoint.method)(endpoint.path, {
       body: endpoint.body ? endpoint.body : HttpBody.empty,
@@ -24,7 +25,8 @@ export const makeHttpRequest = <T>(endpoint: MatrixEndpoint<T>) =>
     })
   })
 
-export const parseHttpResponse = <T>(endpoint: MatrixEndpoint<T>) => HttpClientResponse.schemaBodyJson(endpoint.schema || Schema.Unknown)
+export const parseHttpResponse = <S extends Schema.Top>(endpoint: MatrixEndpoint<S>) =>
+  HttpClientResponse.schemaBodyJson(endpoint.schema.pipe(encodeSnakeCaseSchema), { onExcessProperty: 'preserve' })
 
 export const pathBrandSchema = Schema.String.pipe(Schema.brand('mxfx/api/path'))
 

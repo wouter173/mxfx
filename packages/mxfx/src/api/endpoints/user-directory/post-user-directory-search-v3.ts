@@ -1,18 +1,19 @@
 import { Effect, Schema } from 'effect'
-import { nullable } from '../../schema/transform'
-import { apiPath, makeEndpoint } from '../../matrix-endpoint'
-import { HttpBody } from '@effect/platform'
+
+import { apiPath, makeEndpoint } from '../helpers'
+import { HttpBody } from 'effect/unstable/http'
 import { MxcUri } from '../../../branded/mxc-uri'
+import { encodeSnakeCaseSchema } from '../../schema/encode-case'
 
 const optionsSchema = Schema.Struct({
-  limit: Schema.optional(Schema.Number.pipe(Schema.int())),
-  searchTerm: Schema.propertySignature(Schema.String).pipe(Schema.fromKey('search_term')),
+  limit: Schema.optional(Schema.Int),
+  searchTerm: Schema.String,
 })
 
 const userResponseSchema = Schema.Struct({
-  avatarUrl: Schema.optional(nullable(MxcUri.schema)).pipe(Schema.fromKey('avatar_url')),
-  displayName: Schema.optional(nullable(Schema.String)).pipe(Schema.fromKey('display_name')),
-  userId: Schema.propertySignature(Schema.String).pipe(Schema.fromKey('user_id')),
+  avatarUrl: Schema.OptionFromNullishOr(MxcUri.schema),
+  displayName: Schema.OptionFromNullishOr(Schema.String),
+  userId: Schema.String,
 })
 
 const responseSchema = Schema.Struct({
@@ -31,7 +32,7 @@ const responseSchema = Schema.Struct({
  */
 export const postUserDirectorySearchV3 = (options: Schema.Schema.Type<typeof optionsSchema>) =>
   Effect.gen(function* () {
-    const body = yield* Schema.encode(optionsSchema)(options).pipe(Effect.andThen(HttpBody.json))
+    const body = yield* Schema.encodeEffect(optionsSchema.pipe(encodeSnakeCaseSchema))(options).pipe(Effect.andThen(HttpBody.json))
 
     return yield* makeEndpoint({
       auth: true,

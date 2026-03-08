@@ -1,9 +1,9 @@
 import { Schema } from 'effect'
-import { apiPath, makeEndpoint } from '../../matrix-endpoint'
+import { apiPath, makeEndpoint } from '../helpers'
 import { RoomId } from '../../../branded/room-id'
 
 const responseSchema = Schema.Struct({
-  roomId: RoomId.schema.pipe(Schema.propertySignature, Schema.fromKey('room_id')),
+  roomId: RoomId.schema,
 })
 
 /**

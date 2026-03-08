@@ -1,9 +1,9 @@
 import { Schema } from 'effect'
-import { apiPath, makeEndpoint } from '../../matrix-endpoint'
+import { apiPath, makeEndpoint } from '../helpers'
 
 const responseSchema = Schema.Struct({
   'm.homeserver': Schema.Struct({
-    baseUrl: Schema.propertySignature(Schema.String).pipe(Schema.fromKey('base_url')),
+    baseUrl: Schema.String,
   }),
 })
 

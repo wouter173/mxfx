@@ -11,18 +11,18 @@ export const VersionsResponseSchema = Schema.Struct({
 })
 
 export const RefreshV3ResponseSchema = Schema.Struct({
-  access_token: Schema.String,
-  expires_in_ms: Schema.Number.pipe(Schema.int()),
-  refresh_token: Schema.String,
+  accessToken: Schema.String,
+  expiresInMs: Schema.Int,
+  refreshToken: Schema.String,
 })
 
 export const ProfileV3ResponseSchema = Schema.Struct({
-  avatar_url: Schema.optional(MxcUri.schema),
+  avatarUrl: Schema.optional(MxcUri.schema),
   displayname: Schema.optional(Schema.String),
 })
 
 export const AccountWhoamiV3ResponseSchema = Schema.Struct({
-  user_id: UserId.schema,
-  device_id: Schema.optional(Schema.String),
-  is_guest: Schema.optional(Schema.Boolean),
+  userId: UserId.schema,
+  deviceId: Schema.optional(Schema.String),
+  isGuest: Schema.optional(Schema.Boolean),
 })

@@ -1,45 +1,43 @@
 import { Effect, Schema } from 'effect'
-import { makeEndpoint, apiPath } from '../../matrix-endpoint'
+import { makeEndpoint, apiPath } from '../helpers'
 import { EventId, RoomId } from '../../../branded'
-import { HttpBody } from '@effect/platform'
+import { HttpBody } from 'effect/unstable/http'
+import { encodeSnakeCaseSchema } from '../../schema/encode-case'
 
 const responseSchema = Schema.Struct({
-  eventId: EventId.schema.pipe(Schema.propertySignature, Schema.fromKey('event_id')),
+  eventId: EventId.schema,
 })
 
-const optionsSchema = Schema.Union(
+const commonOptionsSchema = Schema.Struct({
+  roomId: RoomId.schema,
+  transactionId: Schema.optional(Schema.String),
+})
+
+const commonMessageContentSchema = Schema.Struct({
+  body: Schema.String,
+  msgtype: Schema.String,
+})
+
+const optionsSchema = Schema.Union([
   //TODO: support more event types
   Schema.Struct({
+    ...commonOptionsSchema.fields,
     eventType: Schema.Literal('m.room.message'),
-    content: Schema.Struct({
-      body: Schema.String,
-      msgtype: Schema.String,
-    }).pipe(
-      Schema.extend(
-        Schema.Union(
-          Schema.Struct({
-            'm.newContent': Schema.Struct({ body: Schema.String, msgtype: Schema.String }).pipe(
-              Schema.propertySignature,
-              Schema.fromKey('m.new_content'),
-            ),
-            'm.relatesTo': Schema.Struct({
-              relType: Schema.Literal('m.replace').pipe(Schema.propertySignature, Schema.fromKey('rel_type')),
-              eventId: EventId.schema.pipe(Schema.propertySignature, Schema.fromKey('event_id')),
-            }).pipe(Schema.propertySignature, Schema.fromKey('m.relates_to')),
-          }),
-          Schema.Struct({}),
-        ),
-      ),
-    ),
+    content: Schema.Union([
+      Schema.Struct({
+        ...commonMessageContentSchema.fields,
+        'm.newContent': Schema.Struct({ body: Schema.String, msgtype: Schema.String }),
+        'm.relatesTo': Schema.Struct({
+          relType: Schema.Literal('m.replace'),
+          eventId: EventId.schema,
+        }),
+      }),
+      Schema.Struct({
+        ...commonMessageContentSchema.fields,
+      }),
+    ]),
   }),
-).pipe(
-  Schema.extend(
-    Schema.Struct({
-      roomId: RoomId.schema,
-      transactionId: Schema.optional(Schema.String),
-    }),
-  ),
-)
+])
 
 /**
  * `GET /_matrix/client/v3/rooms/{roomId}/send/{eventType}/{txnId}`
@@ -55,7 +53,9 @@ const optionsSchema = Schema.Union(
  */
 export const putRoomsSendV3 = (options: typeof optionsSchema.Type) =>
   Effect.gen(function* () {
-    const body = yield* Schema.encode(optionsSchema)(options).pipe(Effect.andThen(({ content }) => HttpBody.json(content)))
+    const body = yield* Schema.encodeEffect(optionsSchema.pipe(encodeSnakeCaseSchema))(options).pipe(
+      Effect.andThen(({ content }) => HttpBody.json(content)),
+    )
 
     const transactionId = options.transactionId ? options.transactionId : yield* Effect.sync(() => crypto.randomUUID())
 

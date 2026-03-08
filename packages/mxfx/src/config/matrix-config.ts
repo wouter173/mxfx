@@ -1,7 +1,7 @@
 import { Config, Effect, Layer, ServiceMap } from 'effect'
 import { getDiscoveryInformation } from '../api/endpoints/discovery/get-well-known'
-import { BaseHttpClient } from '../api/http-client/base-http-client'
-import { makeHttpRequest, parseHttpResponse } from '../api/matrix-endpoint'
+import * as BaseHttpClient from '../api/http-client/base-http-client'
+import { makeHttpRequest, parseHttpResponse } from '../api/endpoints/helpers'
 
 type MatrixConfigService = {
   serverName: string
@@ -13,7 +13,7 @@ export class MatrixConfig extends ServiceMap.Service<MatrixConfig, MatrixConfigS
 export const make = ({ serverName }: MakeOpts) =>
   Effect.gen(function* () {
     yield* Effect.logDebug(`Creating MatrixConfig for server: ${serverName}`)
-    const baseHttpClient = yield* BaseHttpClient
+    const baseHttpClient = yield* BaseHttpClient.BaseHttpClient
 
     const endpoint = yield* getDiscoveryInformation({ serverName })
 
@@ -29,4 +29,4 @@ type MakeOpts = {
 
 export const layer = (opts: MakeOpts) => Layer.effect(MatrixConfig, make(opts))
 export const layerConfig = (optsConfig: Config.Wrap<MakeOpts>) =>
-  Layer.effect(MatrixConfig, Effect.andThen(Config.unwrap(optsConfig).asEffect(), make))
+  Layer.effect(MatrixConfig, Effect.andThen(Config.unwrap(optsConfig).asEffect(), make)).pipe(Layer.provide(BaseHttpClient.layer))

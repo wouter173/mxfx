@@ -14,15 +14,15 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@effect/platform-node": "4.0.0-beta.17",
+    "@effect/platform-node": "4.0.0-beta.28",
     "@types/node": "^24.10.0",
-    "effect": "4.0.0-beta.17",
+    "effect": "4.0.0-beta.28",
     "mxfx": "workspace:*",
     "nanoid": "^5.1.6"
   },
   "devDependencies": {
     "@effect/language-service": "^0.76.0",
-    "@effect/vitest": "4.0.0-beta.17",
+    "@effect/vitest": "4.0.0-beta.28",
     "vitest": "^3.0.0",
     "dotenv-cli": "^11.0.0",
     "expo-secure-store": "^15.0.7",

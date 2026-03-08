@@ -1,5 +1,5 @@
 import { Schema } from 'effect'
-import { apiPath, makeEndpoint } from '../../matrix-endpoint'
+import { apiPath, makeEndpoint } from '../helpers'
 
 const booleanCapabilitySchema = Schema.Struct({
   enabled: Schema.Boolean,
@@ -13,7 +13,7 @@ const profileFieldsCapabilitySchema = Schema.Struct({
 
 const roomVersionsCapability = Schema.Struct({
   default: Schema.String,
-  available: Schema.Record({ key: Schema.String, value: Schema.String }),
+  available: Schema.Record(Schema.String, Schema.String),
 })
 
 const responseSchema = Schema.Struct({

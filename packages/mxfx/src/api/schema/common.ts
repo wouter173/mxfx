@@ -1,210 +1,184 @@
-import { Schema } from 'effect'
+import { Schema, Struct } from 'effect'
 import { EventId } from '../../branded/event-id'
 import { MxcUri } from '../../branded/mxc-uri'
 import { RoomId } from '../../branded/room-id'
 import { UserId } from '../../branded/user-id'
 
-export const BaseEventSchema = Schema.Unknown
-// Schema.Union(
-//   Schema.Struct({
-//     type: Schema.String,
-//     content: Schema.Object, //TODO EventContent
-//   }),
-//   Schema.Record({ key: Schema.String, value: Schema.Unknown }),
-// )
+export const BaseEvent = Schema.Unknown
 
 //StrippedStateEvent
 
-export const StrippedStateEventSchema = Schema.Struct({
-  // ...BaseEventSchema.fields,
+export const StrippedStateEvent = Schema.Struct({
   type: Schema.String,
-  content: Schema.Object, //TODO EventContent
+  content: Schema.Any, //TODO EventContent
   sender: UserId.schema,
-  stateKey: Schema.propertySignature(Schema.String).pipe(Schema.fromKey('state_key')),
+  stateKey: Schema.String,
 })
 
 //ClientEvent
 
-type ClientEvent = {
-  type: string
-  content: object //TODO EventContent
-  eventId: EventId
-  originServerTs: number
-  roomId: RoomId
-  sender: UserId
-  stateKey?: string
-  unsigned?: {
-    age?: number
-    membership?: string
-    prevContent?: object //TODO EventContent
-    redactedBecause?: ClientEvent
-    transactionId?: string
-  }
-}
+export class ClientEventUnsigned extends Schema.Opaque<ClientEventUnsigned>()(
+  Schema.Struct({
+    age: Schema.optional(Schema.Int),
+    membership: Schema.optional(Schema.String),
+    prevContent: Schema.optional(Schema.Any),
+    redactedBecause: Schema.optional(Schema.suspend((): Schema.Codec<ClientEvent, ClientEventEncoded> => ClientEvent)),
+    transactionId: Schema.optional(Schema.String),
+  }),
+) {}
 
-const ClientEventUnsignedFieldSchema = Schema.Struct({
-  age: Schema.optional(Schema.Number.pipe(Schema.int())),
-  membership: Schema.optional(Schema.String),
-  prevContent: Schema.optional(Schema.Object).pipe(Schema.fromKey('prev_content')), //TODO EventContent
-  redactedBecause: Schema.optional(
-    Schema.suspend((): Schema.Schema<ClientEvent> => ClientEventSchema as unknown as Schema.Schema<ClientEvent>),
-  ).pipe(Schema.fromKey('redacted_because')),
-  transactionId: Schema.optional(Schema.String).pipe(Schema.fromKey('transaction_id')),
-})
+export class ClientEvent extends Schema.Opaque<ClientEvent>()(
+  Schema.Struct({
+    type: Schema.String,
+    content: Schema.Any, //TODO EventContent
+    eventId: EventId.schema,
+    originServerTs: Schema.Int,
+    roomId: RoomId.schema,
+    sender: UserId.schema,
+    stateKey: Schema.optional(Schema.String),
+    unsigned: Schema.optional(ClientEventUnsigned),
+  }),
+) {}
 
-export const ClientEventSchema = Schema.Struct({
-  // ...BaseEventSchema.fields,
-  type: Schema.String,
-  content: Schema.Object, //TODO EventContent
-  eventId: EventId.schema.pipe(Schema.propertySignature, Schema.fromKey('event_id')),
-  originServerTs: Schema.Number.pipe(Schema.int(), Schema.propertySignature, Schema.fromKey('origin_server_ts')),
-  roomId: RoomId.schema.pipe(Schema.propertySignature, Schema.fromKey('room_id')),
-  sender: UserId.schema,
-  stateKey: Schema.String.pipe(Schema.optional, Schema.fromKey('state_key')),
-  unsigned: Schema.optional(ClientEventUnsignedFieldSchema),
-})
+interface ClientEventEncoded extends Schema.Codec.Encoded<typeof ClientEvent> {}
 
-// ClientEventWithoutRoomId
+export class ClientEventWithoutRoomIdUnsigned extends Schema.Opaque<ClientEventWithoutRoomIdUnsigned>()(
+  Schema.Struct({
+    ...ClientEventUnsigned.fields,
+    redactedBecause: Schema.optional(
+      Schema.suspend((): Schema.Codec<ClientEventWithoutRoomId, ClientEventWithoutRoomIdEncoded> => ClientEventWithoutRoomId),
+    ),
+  }),
+) {}
 
-type ClientEventWithoutRoomId = Omit<ClientEvent, 'room_id'> & {
-  unsigned?: Omit<ClientEvent['unsigned'], 'redactedBecause'> & {
-    redactedBecause?: ClientEventWithoutRoomId
-  }
-}
+export class ClientEventWithoutRoomId extends Schema.Opaque<ClientEventWithoutRoomId>()(
+  Schema.Struct({
+    ...ClientEvent.mapFields(Struct.omit(['roomId'])).fields,
+    unsigned: Schema.optional(ClientEventWithoutRoomIdUnsigned),
+  }),
+) {}
 
-const ClientEventWithoutRoomIdSchemaUnsignedFieldSchema = Schema.Struct({
-  ...ClientEventUnsignedFieldSchema.fields,
-  redactedBecause: Schema.suspend(
-    (): Schema.Schema<ClientEventWithoutRoomId> => ClientEventWithoutRoomIdSchema as unknown as Schema.Schema<ClientEventWithoutRoomId>,
-  ).pipe(Schema.optional, Schema.fromKey('redacted_because')),
-})
-
-export const ClientEventWithoutRoomIdSchema = Schema.Struct({
-  ...ClientEventSchema.omit('roomId').fields,
-  unsigned: Schema.optional(ClientEventWithoutRoomIdSchemaUnsignedFieldSchema),
-})
+interface ClientEventWithoutRoomIdEncoded extends Schema.Codec.Encoded<typeof ClientEventWithoutRoomId> {}
 
 // room message events
-export const RoomMessageEventTextCommonContentSchema = Schema.extend(
-  Schema.Struct({
-    msgtype: Schema.Union(Schema.Literal('m.text'), Schema.Literal('m.emote'), Schema.Literal('m.notice')),
-    body: Schema.String,
-  }),
-  Schema.Union(
-    Schema.Struct({
-      format: Schema.Literal('org.matrix.custom.html'),
-      formattedBody: Schema.String.pipe(Schema.propertySignature, Schema.fromKey('formatted_body')),
-    }),
-    Schema.Struct({
-      format: Schema.Undefined,
-      formattedBody: Schema.Undefined.pipe(Schema.propertySignature, Schema.fromKey('formatted_body')),
-    }),
-  ),
-)
+const RoomMessageEventTextCommonContentFormatted = Schema.Struct({
+  msgtype: Schema.Union([Schema.Literal('m.text'), Schema.Literal('m.emote'), Schema.Literal('m.notice')]),
+  body: Schema.String,
+  format: Schema.Literal('org.matrix.custom.html'),
+  formattedBody: Schema.String,
+})
 
-export const RoomMessageEventImageContentInfoThumbnailInfoSchema = Schema.Struct({
-  h: Schema.optional(Schema.Number.pipe(Schema.int())),
-  w: Schema.optional(Schema.Number.pipe(Schema.int())),
-  size: Schema.optional(Schema.Number.pipe(Schema.int())),
+const RoomMessageEventTextCommonContentPlain = Schema.Struct({
+  msgtype: Schema.Union([Schema.Literal('m.text'), Schema.Literal('m.emote'), Schema.Literal('m.notice')]),
+  body: Schema.String,
+  format: Schema.Undefined,
+  formattedBody: Schema.Undefined,
+})
+
+export const RoomMessageEventTextCommonContent = Schema.Union([
+  RoomMessageEventTextCommonContentFormatted,
+  RoomMessageEventTextCommonContentPlain,
+])
+
+export const RoomMessageEventImageContentInfoThumbnailInfo = Schema.Struct({
+  h: Schema.optional(Schema.Int),
+  w: Schema.optional(Schema.Int),
+  size: Schema.optional(Schema.Int),
   mimetype: Schema.optional(Schema.String),
 })
 
-export const RoomMessageEventImageContentInfoSchema = Schema.Struct({
-  h: Schema.optional(Schema.Number.pipe(Schema.int())),
-  w: Schema.optional(Schema.Number.pipe(Schema.int())),
-  size: Schema.optional(Schema.Number.pipe(Schema.int())),
+export const RoomMessageEventImageContentInfo = Schema.Struct({
+  h: Schema.optional(Schema.Int),
+  w: Schema.optional(Schema.Int),
+  size: Schema.optional(Schema.Int),
   mimetype: Schema.optional(Schema.String),
-  thumbnailInfo: RoomMessageEventImageContentInfoThumbnailInfoSchema.pipe(Schema.optional, Schema.fromKey('thumbnail_info')),
-  thumbnailUrl: MxcUri.schema.pipe(Schema.optional, Schema.fromKey('thumbnail_url')),
-  thumbnailFile: Schema.Any.pipe(Schema.optional, Schema.fromKey('thumbnail_file')), //TODO: EncryptedFile
+  thumbnailInfo: Schema.optional(RoomMessageEventImageContentInfoThumbnailInfo),
+  thumbnailUrl: Schema.optional(MxcUri.schema),
+  thumbnailFile: Schema.optional(Schema.Any), //TODO: EncryptedFile
 })
 
-export const RoomMessageEventImageContentSchema = Schema.extend(
-  Schema.Struct({
-    msgtype: Schema.Literal('m.image'),
-    body: Schema.String, // If filename is not set or the value of both properties are identical, this is the filename of the original upload. Otherwise, this is a caption for the image.
-    filename: Schema.optional(Schema.String),
-    info: Schema.optional(RoomMessageEventImageContentInfoSchema),
-    url: MxcUri.schema,
-    file: Schema.Any, //TODO: EncryptedFile
-  }),
-  Schema.Union(
-    Schema.Struct({
-      format: Schema.Literal('org.matrix.custom.html'),
-      formattedBody: Schema.String.pipe(Schema.propertySignature, Schema.fromKey('formatted_body')),
-    }),
-    Schema.Struct({
-      format: Schema.Undefined,
-      formattedBody: Schema.Undefined.pipe(Schema.propertySignature, Schema.fromKey('formatted_body')),
-    }),
-  ),
-)
+const RoomMessageEventImageContentFormatted = Schema.Struct({
+  msgtype: Schema.Literal('m.image'),
+  body: Schema.String,
+  filename: Schema.optional(Schema.String),
+  info: Schema.optional(RoomMessageEventImageContentInfo),
+  url: MxcUri.schema,
+  file: Schema.Any,
+  format: Schema.Literal('org.matrix.custom.html'),
+  formattedBody: Schema.String,
+})
+
+const RoomMessageEventImageContentPlain = Schema.Struct({
+  msgtype: Schema.Literal('m.image'),
+  body: Schema.String,
+  filename: Schema.optional(Schema.String),
+  info: Schema.optional(RoomMessageEventImageContentInfo),
+  url: MxcUri.schema,
+  file: Schema.Any,
+  format: Schema.Undefined,
+  formattedBody: Schema.Undefined,
+})
+
+export const RoomMessageEventImageContent = Schema.Union([RoomMessageEventImageContentFormatted, RoomMessageEventImageContentPlain])
 
 //TODO: m.file, m.audio, m.location, m.video
 
-export const RoomMessageEventPartialSchema = Schema.Struct({
+export const RoomMessageEventPartial = Schema.Struct({
   type: Schema.Literal('m.room.message'),
-  content: Schema.Union(RoomMessageEventTextCommonContentSchema, RoomMessageEventImageContentSchema),
+  content: Schema.Union([RoomMessageEventTextCommonContent, RoomMessageEventImageContent]),
 })
 
 // room state events
-export const RoomNameEventPartialSchema = Schema.Struct({
+export const RoomNameEventPartial = Schema.Struct({
   type: Schema.Literal('m.room.name'),
   content: Schema.Struct({
     name: Schema.String,
   }),
 })
 
-export const RoomTopicEventPartialSchema = Schema.Struct({
+export const RoomTopicEventPartial = Schema.Struct({
   type: Schema.Literal('m.room.topic'),
   content: Schema.Struct({
     topic: Schema.String,
   }),
 })
 
-export const RoomAvatarEventPartialSchema = Schema.Struct({
+export const RoomAvatarEventPartial = Schema.Struct({
   type: Schema.Literal('m.room.avatar'),
   content: Schema.Struct({
     url: MxcUri.schema,
     info: Schema.optional(
       Schema.Struct({
         mimetype: Schema.String,
-        size: Schema.Number.pipe(Schema.int()),
-        width: Schema.Number.pipe(Schema.int()),
-        height: Schema.Number.pipe(Schema.int()),
+        size: Schema.Int,
+        width: Schema.Int,
+        height: Schema.Int,
       }),
     ),
     //TODO thumbnail_url, thumbnail_info
   }),
 })
 
-export const RoomPinnedEventsEventPartialSchema = Schema.Struct({
+export const RoomPinnedEventsEventPartial = Schema.Struct({
   type: Schema.Literal('m.room.pinned_events'),
   content: Schema.Struct({
     pinned: Schema.Array(EventId.schema),
   }),
 })
 
-export const AccountDataSchema = Schema.Struct({
-  events: Schema.Array(BaseEventSchema),
+export const AccountData = Schema.Struct({
+  events: Schema.Array(BaseEvent),
 })
 
-export const RoomMessageEventSchema = Schema.Struct({
-  ...ClientEventWithoutRoomIdSchema.fields,
-  ...RoomMessageEventPartialSchema.fields,
+export const RoomMessageEvent = Schema.Struct({
+  ...ClientEventWithoutRoomId.fields,
+  ...RoomMessageEventPartial.fields,
 })
 
-export const TimelineSchema = Schema.Struct({
-  events: Schema.optional(Schema.Array(Schema.Union(ClientEventWithoutRoomIdSchema, RoomMessageEventSchema))),
+export const Timeline = Schema.Struct({
+  events: Schema.optional(Schema.Array(Schema.Union([ClientEventWithoutRoomId, RoomMessageEvent]))),
   limited: Schema.optional(Schema.Boolean),
-  prevBatch: Schema.String.pipe(Schema.optional, Schema.fromKey('prev_batch')),
+  prevBatch: Schema.optional(Schema.String),
 })
 
-export const StateSchema = Schema.Struct({ events: Schema.Array(ClientEventWithoutRoomIdSchema) })
-
-export const RoomMessageV3ResponseSchema = Schema.Struct({
-  chunk: Schema.Array(ClientEventSchema),
-  start: Schema.String,
-  end: Schema.optional(Schema.String),
-  state: Schema.optional(Schema.Array(ClientEventSchema)),
-})
+export const StateSchema = Schema.Struct({ events: Schema.Array(ClientEventWithoutRoomId) })

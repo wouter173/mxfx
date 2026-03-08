@@ -1,6 +1,6 @@
 import { describe, expect, test } from '@effect/vitest'
-import { apiPath } from './matrix-endpoint'
-import { RoomId } from '../branded'
+import { apiPath } from './helpers'
+import { RoomId } from '../../branded'
 import { Effect } from 'effect'
 
 describe('MatrixEndpoint', () => {

@@ -9,14 +9,14 @@ importers:
   .:
     dependencies:
       '@effect/platform-node':
-        specifier: 4.0.0-beta.17
-        version: 4.0.0-beta.17(effect@4.0.0-beta.17)(ioredis@5.9.3)
+        specifier: 4.0.0-beta.28
+        version: 4.0.0-beta.28(effect@4.0.0-beta.28)(ioredis@5.9.3)
       '@types/node':
         specifier: ^24.10.0
         version: 24.10.0
       effect:
-        specifier: 4.0.0-beta.17
-        version: 4.0.0-beta.17
+        specifier: 4.0.0-beta.28
+        version: 4.0.0-beta.28
       mxfx:
         specifier: workspace:*
         version: link:packages/mxfx
@@ -28,8 +28,8 @@ importers:
         specifier: ^0.76.0
         version: 0.76.0
       '@effect/vitest':
-        specifier: 4.0.0-beta.17
-        version: 4.0.0-beta.17(effect@4.0.0-beta.17)(vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.10.0)(lightningcss@1.30.2)(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.2))
+        specifier: 4.0.0-beta.28
+        version: 4.0.0-beta.28(effect@4.0.0-beta.28)(vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.10.0)(lightningcss@1.30.2)(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.2))
       dotenv-cli:
         specifier: ^11.0.0
         version: 11.0.0
@@ -55,15 +55,15 @@ importers:
   packages/mxfx:
     dependencies:
       effect:
-        specifier: 4.0.0-beta.17
-        version: 4.0.0-beta.17
+        specifier: 4.0.0-beta.28
+        version: 4.0.0-beta.28
       expo-secure-store:
         specifier: ^15.0.7
         version: 15.0.7(expo@54.0.23(@babel/core@7.28.5)(react-native@0.82.1(@babel/core@7.28.5)(react@19.2.0))(react@19.2.0))
     devDependencies:
       '@effect/vitest':
-        specifier: 4.0.0-beta.17
-        version: 4.0.0-beta.17(effect@4.0.0-beta.17)(vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.10.0)(lightningcss@1.30.2)(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.2))
+        specifier: 4.0.0-beta.28
+        version: 4.0.0-beta.28(effect@4.0.0-beta.28)(vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.10.0)(lightningcss@1.30.2)(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.2))
 
 packages:
 
@@ -576,24 +576,24 @@ packages:
     resolution: {integrity: sha512-tCFQjdvdeqSx+j+QCA9dbz5K4BJtsvIknH8sHft8pTT8ClmVr7uAghD7TcufCtDOZQunXRXyKqQZzErduqhSYQ==}
     hasBin: true
 
-  '@effect/platform-node-shared@4.0.0-beta.17':
-    resolution: {integrity: sha512-Kng/3XgcYhsJ9LDHEhWdx7/xea8vlJikxwVZhpfsPBMS5vgFe/n8ME6lbuRH1m4xGBz/kV81haADHa2Yvp8c5Q==}
+  '@effect/platform-node-shared@4.0.0-beta.28':
+    resolution: {integrity: sha512-k3HAbzlUEA7pEtfmMr8lTWzhamn7a1jEmg4Te+p/rJwu2ZjYBg2vSa/FoIjQQPXo+morqLUIUqosY3vDub/+XQ==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
-      effect: ^4.0.0-beta.17
+      effect: ^4.0.0-beta.28
 
-  '@effect/platform-node@4.0.0-beta.17':
-    resolution: {integrity: sha512-t6jA7jpxQ134rGHXATfXlbmyal6qc9rfSfV27qslzwhpWt+SAVVWQ8R8W2ankd5FdhjjGolI+zGDVTyO5tCvQg==}
+  '@effect/platform-node@4.0.0-beta.28':
+    resolution: {integrity: sha512-AIna99z2G9thtbMzjT3jwonn4cLvk/MSP2b3Emmaa+Rifrn58tC7oohdVYdA0eLH2whddi8i9TvMMoeirZf1qA==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
-      effect: ^4.0.0-beta.17
+      effect: ^4.0.0-beta.28
       ioredis: ^5.7.0
 
-  '@effect/vitest@4.0.0-beta.17':
-    resolution: {integrity: sha512-qzK8Fugd0U5JO4y8gJvvpNfFn7C4qpd+7duyF1tscmgFIifPQVsmNNO718devEhQVm5TUkbOOQFwN0UbVh+yNw==}
+  '@effect/vitest@4.0.0-beta.28':
+    resolution: {integrity: sha512-18Li/g0dtJ9w74dQXWcDsiJS4t+NJJoQy7Naf6iFrdMUEFkxEM7uc+2XGoO97NNV9/4UQdzbKtU4VLdrDRuf+g==}
     peerDependencies:
-      effect: ^4.0.0-beta.17
-      vitest: ^3.0.0
+      effect: ^4.0.0-beta.28
+      vitest: ^3.0.0 || ^4.0.0
 
   '@esbuild/aix-ppc64@0.25.12':
     resolution: {integrity: sha512-Hhmwd6CInZ3dwpuGTF8fJG6yoWmsToE+vYgD4nytZVxcu1ulHpUQRAB1UJ8+N1Am3Mz4+xOByoQoSZf4D+CpkA==}
@@ -1723,8 +1723,8 @@ packages:
   ee-first@1.1.1:
     resolution: {integrity: sha512-WMwm9LhRUo+WUaRN+vRuETqG89IgZphVSNkdFgeb6sS/E4OrDIN7t48CAewSHXc6C8lefD8KKfr5vY61brQlow==}
 
-  effect@4.0.0-beta.17:
-    resolution: {integrity: sha512-1NPWLH/ufmoJXHInKTirtPMgKZ/D7ckRGtTP444GMR457pf092UBNLPDHgnUogmTgT2DWniFWq9eyn+vY60UlQ==}
+  effect@4.0.0-beta.28:
+    resolution: {integrity: sha512-9T/LPIF/t54DN/z1gTnJ3Jwv4s6iWlN3w8Jvg7koDLI4whLXDEsnXWhMf05yQZUSNRJ0naVV1Ltwr2+cEj0HZA==}
 
   electron-to-chromium@1.5.249:
     resolution: {integrity: sha512-5vcfL3BBe++qZ5kuFhD/p8WOM1N9m3nwvJPULJx+4xf2usSlZFJ0qoNYO2fOX4hi3ocuDcmDobtA+5SFr4OmBg==}
@@ -4056,19 +4056,19 @@ snapshots:
 
   '@effect/language-service@0.76.0': {}
 
-  '@effect/platform-node-shared@4.0.0-beta.17(effect@4.0.0-beta.17)':
+  '@effect/platform-node-shared@4.0.0-beta.28(effect@4.0.0-beta.28)':
     dependencies:
       '@types/ws': 8.18.1
-      effect: 4.0.0-beta.17
+      effect: 4.0.0-beta.28
       ws: 8.19.0
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
 
-  '@effect/platform-node@4.0.0-beta.17(effect@4.0.0-beta.17)(ioredis@5.9.3)':
+  '@effect/platform-node@4.0.0-beta.28(effect@4.0.0-beta.28)(ioredis@5.9.3)':
     dependencies:
-      '@effect/platform-node-shared': 4.0.0-beta.17(effect@4.0.0-beta.17)
-      effect: 4.0.0-beta.17
+      '@effect/platform-node-shared': 4.0.0-beta.28(effect@4.0.0-beta.28)
+      effect: 4.0.0-beta.28
       ioredis: 5.9.3
       mime: 4.1.0
       undici: 7.22.0
@@ -4076,9 +4076,9 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
-  '@effect/vitest@4.0.0-beta.17(effect@4.0.0-beta.17)(vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.10.0)(lightningcss@1.30.2)(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.2))':
+  '@effect/vitest@4.0.0-beta.28(effect@4.0.0-beta.28)(vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.10.0)(lightningcss@1.30.2)(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.2))':
     dependencies:
-      effect: 4.0.0-beta.17
+      effect: 4.0.0-beta.28
       vitest: 3.2.4(@types/debug@4.1.12)(@types/node@24.10.0)(lightningcss@1.30.2)(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.2)
 
   '@esbuild/aix-ppc64@0.25.12':
@@ -5397,7 +5397,7 @@ snapshots:
 
   ee-first@1.1.1: {}
 
-  effect@4.0.0-beta.17:
+  effect@4.0.0-beta.28:
     dependencies:
       '@standard-schema/spec': 1.1.0
       fast-check: 4.5.3

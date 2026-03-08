@@ -1,5 +1,5 @@
-import { Effect, Schema } from 'effect'
-import { apiPath, makeEndpoint } from '../../matrix-endpoint'
+import { Schema } from 'effect'
+import { apiPath, makeEndpoint } from '../helpers'
 
 const responseSchema = Schema.Struct({
   flows: Schema.Array(Schema.Struct({ type: Schema.String })),

@@ -1,10 +1,10 @@
 import { Effect, Schema } from 'effect'
-import { apiPath, makeEndpoint } from '../../matrix-endpoint'
+import { apiPath, makeEndpoint } from '../helpers'
 import { MxcUri } from '../../../branded/mxc-uri'
 import { UserId } from '../../../branded/user-id'
 
 const responseSchema = Schema.Struct({
-  avatarUrl: Schema.optional(MxcUri.schema).pipe(Schema.fromKey('avatar_url')),
+  avatarUrl: Schema.optional(Schema.NullOr(MxcUri.schema)),
   displayname: Schema.optional(Schema.String),
   //TODO: Make versioned fields
   'm.tz': Schema.optional(Schema.String),

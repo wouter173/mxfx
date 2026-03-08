@@ -11,10 +11,10 @@
     "./branded": "./src/branded/index.ts"
   },
   "peerDependencies": {
-    "effect": "4.0.0-beta.17",
+    "effect": "4.0.0-beta.28",
     "expo-secure-store": "^15.0.7"
   },
   "devDependencies": {
-    "@effect/vitest": "4.0.0-beta.17"
+    "@effect/vitest": "4.0.0-beta.28"
   }
 }

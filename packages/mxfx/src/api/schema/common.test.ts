@@ -1,37 +1,63 @@
-import { describe, expect, it } from '@effect/vitest'
+import { describe, expect, expectTypeOf, it } from '@effect/vitest'
 import { Effect, Schema } from 'effect'
-import { ClientEventSchema, RoomMessageEventPartialSchema } from './common'
-import { nullable } from './transform'
+import type { Effect as FxEffect } from 'effect/Effect'
+import { ClientEvent, ClientEventWithoutRoomId, RoomMessageEventPartial } from './common'
+import { encodeSnakeCaseKeys } from './encode-case'
+import { EventId, UserId } from '../../branded'
 
-const decode = Schema.decode(
-  Schema.Struct({
-    ...ClientEventSchema.fields,
-    ...RoomMessageEventPartialSchema.fields,
-  }),
-)
+describe('event schema', () => {
+  it('decodeEffect keeps typed recursive redactedBecause', () => {
+    const decodeClientEventWithoutRoomId = Schema.decodeEffect(ClientEventWithoutRoomId)
 
-describe('event', () => {
+    type DecodedClientEventWithoutRoomId =
+      ReturnType<typeof decodeClientEventWithoutRoomId> extends FxEffect<infer Success, infer _Error, infer _Context> ? Success : never
+    type DecodedRecursiveRedactedBecause = NonNullable<NonNullable<DecodedClientEventWithoutRoomId['unsigned']>['redactedBecause']>
+
+    expectTypeOf<DecodedRecursiveRedactedBecause>().toExtend<{
+      eventId: Schema.Schema.Type<typeof EventId.schema>
+      sender: Schema.Schema.Type<typeof UserId.schema>
+      originServerTs: number
+    }>()
+  })
+
+  it('has typed recursive redactedBecause', () => {
+    type RecursiveRedactedBecause = NonNullable<
+      NonNullable<Schema.Schema.Type<typeof ClientEventWithoutRoomId>['unsigned']>['redactedBecause']
+    >
+
+    expectTypeOf<RecursiveRedactedBecause>().toExtend<{
+      eventId: Schema.Schema.Type<typeof EventId.schema>
+      sender: Schema.Schema.Type<typeof UserId.schema>
+      originServerTs: number
+    }>()
+  })
+
   it.effect('should be valid RoomId', () =>
     Effect.gen(function* () {
-      expect(
-        yield* decode({
-          content: {
-            body: 'This is an example text message',
-            format: 'org.matrix.custom.html',
-            formatted_body: '<b>This is an example text message</b>',
-            msgtype: 'm.text',
-          },
-          event_id: '$143273582443PhrSn:example.org',
-          origin_server_ts: 1432735824653,
-          room_id: '!jEsUZKDJdhlrceRyVU:example.org',
-          sender: '@example:example.org',
-          type: 'm.room.message',
-          unsigned: {
-            age: 1234,
-            membership: 'join',
-          },
-        }),
-      ).toStrictEqual({
+      const schema = Schema.Struct({
+        ...ClientEvent.fields,
+        ...RoomMessageEventPartial.fields,
+      }).pipe(encodeSnakeCaseKeys)
+
+      const output = yield* Schema.decodeEffect(schema)({
+        content: {
+          body: 'This is an example text message',
+          format: 'org.matrix.custom.html',
+          formatted_body: '<b>This is an example text message</b>',
+          msgtype: 'm.text',
+        },
+        event_id: '$143273582443PhrSn:example.org',
+        origin_server_ts: 1432735824653,
+        room_id: '!jEsUZKDJdhlrceRyVU:example.org',
+        sender: '@example:example.org',
+        type: 'm.room.message',
+        unsigned: {
+          age: 1234,
+          membership: 'join',
+        },
+      })
+
+      expect(output).toStrictEqual({
         content: {
           body: 'This is an example text message',
           format: 'org.matrix.custom.html',
@@ -47,28 +73,68 @@ describe('event', () => {
       })
     }),
   )
-})
 
-describe('nullable helper', () => {
-  it.effect('should en- and decode nullable schema', () =>
+  it('should decode recursive unsigned.redactedBecause chain', () =>
     Effect.gen(function* () {
-      const NullableStringSchema = nullable(Schema.String)
-      expect(yield* Schema.decode(NullableStringSchema)(null)).toBeUndefined()
-      expect(yield* Schema.decode(NullableStringSchema)('hello')).toBe('hello')
-      expect(yield* Schema.encode(NullableStringSchema)(undefined)).toBeUndefined()
-      expect(yield* Schema.encode(NullableStringSchema)('hello')).toBe('hello')
-    }),
-  )
-  it.effect('should en- and decode nullable optional schema', () =>
-    Effect.gen(function* () {
-      const NullableOptionalStringSchema = Schema.Struct({
-        value: Schema.optional(nullable(Schema.String)),
+      const output = yield* Schema.decodeEffect(ClientEventWithoutRoomId)({
+        type: 'm.room.message',
+        content: {
+          body: 'root',
+          format: 'org.matrix.custom.html',
+          formattedBody: '<b>root</b>',
+          msgtype: 'm.text',
+        },
+        eventId: yield* EventId.make('$root:example.org'),
+        sender: yield* UserId.make('@example:example.org'),
+        originServerTs: 1,
+        unsigned: {
+          membership: 'join',
+          redactedBecause: {
+            type: 'm.room.message',
+            content: {
+              body: 'child',
+              format: 'org.matrix.custom.html',
+              formattedBody: '<b>child</b>',
+              msgtype: 'm.text',
+            },
+            eventId: yield* EventId.make('$child:example.org'),
+            sender: yield* UserId.make('@example:example.org'),
+            originServerTs: 2,
+            unsigned: {
+              redactedBecause: {
+                type: 'm.room.message',
+                content: {
+                  body: 'grandchild',
+                  format: 'org.matrix.custom.html',
+                  formattedBody: '<b>grandchild</b>',
+                  msgtype: 'm.text',
+                },
+                eventId: yield* EventId.make('$grandchild:example.org'),
+                sender: yield* UserId.make('@example:example.org'),
+                originServerTs: 3,
+              },
+            },
+          },
+        },
       })
-      expect(yield* Schema.decode(NullableOptionalStringSchema)({ value: null })).toStrictEqual({ value: undefined })
-      expect(yield* Schema.decode(NullableOptionalStringSchema)({ value: 'hello' })).toStrictEqual({ value: 'hello' })
-      expect(yield* Schema.decode(NullableOptionalStringSchema)({})).toStrictEqual({})
-      expect(yield* Schema.encode(NullableOptionalStringSchema)({ value: undefined })).toStrictEqual({ value: undefined })
-      expect(yield* Schema.encode(NullableOptionalStringSchema)({})).toStrictEqual({})
-    }),
-  )
+
+      expect(output).toMatchObject({
+        unsigned: {
+          redactedBecause: {
+            eventId: '$child:example.org',
+            unsigned: {
+              redactedBecause: {
+                eventId: '$grandchild:example.org',
+                content: {
+                  body: 'grandchild',
+                  format: 'org.matrix.custom.html',
+                  formattedBody: '<b>grandchild</b>',
+                  msgtype: 'm.text',
+                },
+              },
+            },
+          },
+        },
+      })
+    }))
 })

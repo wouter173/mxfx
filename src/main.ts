@@ -1,17 +1,17 @@
 import { NodeHttpClient, NodeRuntime } from '@effect/platform-node'
-import { Config, Duration, Effect, Layer, Logger, LogLevel, Option, PubSub, Redacted, Stream } from 'effect'
+import { Config, Duration, Effect, Layer, Logger, Option, PubSub, Redacted, Result, Stream } from 'effect'
 import { MatrixConfig } from 'mxfx'
 import { MatrixApi, endpoints } from 'mxfx/api'
 import { InMemoryVault, Vault } from 'mxfx/vault'
-import { RoomId, UserId } from 'mxfx/branded'
-import type { ClientEventWithoutRoomIdSchema, RoomMessageEventSchema } from '../packages/mxfx/src/api/schema/common'
+import { EventId, RoomId, UserId } from 'mxfx/branded'
+import type { ClientEventWithoutRoomId, RoomMessageEvent } from '../packages/mxfx/src/api/schema/common'
 import { DevTools } from 'effect/unstable/devtools'
 
 function typedEntries<T extends Record<string, any>>(obj: T): { [K in keyof T]: [K, T[K]] }[keyof T][] {
   return Object.entries(obj) as any
 }
 
-function isRoomMessageEvent(event: typeof ClientEventWithoutRoomIdSchema.Type): event is typeof RoomMessageEventSchema.Type {
+function isRoomMessageEvent(event: typeof ClientEventWithoutRoomId.Encoded): event is typeof RoomMessageEvent.Encoded {
   return event.type === 'm.room.message'
 }
 
@@ -19,10 +19,12 @@ const program = Effect.gen(function* () {
   const matrixUserName = yield* Config.string('MATRIX_USER_NAME')
   const matrixUserPassword = yield* Config.redacted('MATRIX_USER_PASSWORD')
 
+  yield* Effect.logDebug(`Starting mxfx client with user: ${matrixUserName} on server: ${yield* Config.string('MATRIX_HOME_SERVER')}`)
+
   const matrixConfig = yield* MatrixConfig.MatrixConfig
   yield* Effect.log({ matrixUserName, matrixUserPassword, matrixBaseUrl: matrixConfig.baseUrl })
 
-  const matrixApi = yield* MatrixApi
+  const matrixApi = yield* MatrixApi.MatrixApi
   const vault = yield* Vault
 
   const userId = yield* UserId.make(`@${matrixUserName}:${matrixConfig.serverName}`)
@@ -50,31 +52,37 @@ const program = Effect.gen(function* () {
 
   yield* Stream.fromPubSub(syncHub).pipe(
     Stream.runForEach(sync => Effect.log(`Received sync response: ${JSON.stringify(sync)}`)),
-    Effect.fork,
+    Effect.forkChild,
   )
 
   yield* Stream.fromPubSub(syncHub).pipe(
-    Stream.filterMap(sync => Option.fromNullable(sync.rooms?.invite)),
-    Stream.mapConcat(invites => Object.entries(invites)),
+    Stream.filterMap(sync => Result.fromNullishOr(sync.rooms?.invite, () => 'No invites')),
+    Stream.map(invites => Object.entries(invites)),
+    Stream.flatMap(invitesEntries => Stream.fromArray(invitesEntries)),
     Stream.runForEach(([roomId]) =>
       RoomId.make(roomId).pipe(
         Effect.andThen(roomId => endpoints.postRoomsJoinV3({ roomId })),
         Effect.andThen(matrixApi.execute),
         Effect.andThen(() => Effect.log(`Joined room ${roomId} that we were invited to`)),
-        Effect.catchAll(err => Effect.logError(`Failed to join room ${roomId}: ${err}`)),
+        Effect.catch(err => Effect.logError(`Failed to join room ${roomId}: ${err}`)),
       ),
     ),
-    Effect.fork,
+    Effect.forkChild,
   )
 
   yield* Stream.fromPubSub(syncHub).pipe(
-    Stream.filterMap(sync => Option.fromNullable(sync.rooms?.join)),
-    Stream.mapConcat(joinedRooms => typedEntries(joinedRooms)),
+    Stream.filterMap(sync => Result.fromNullishOr(sync.rooms?.join, () => 'No joined rooms')),
+    Stream.map(joinedRooms => typedEntries(joinedRooms)),
+    Stream.flatMap(joinedRoomsEntries => Stream.fromArray(joinedRoomsEntries)),
+
     Stream.filterMap(([roomId, roomData]) =>
-      Option.fromNullable(roomData.timeline?.events).pipe(Option.map(events => ({ roomId, events }))),
+      Result.fromNullishOr(roomData.timeline?.events, () => 'No timeline events').pipe(Result.map(events => ({ roomId, events }))),
     ),
-    Stream.mapConcat(({ roomId, events }) => events.map(event => ({ roomId, event }))),
-    Stream.filterMap(({ roomId, event }) => Option.liftPredicate(isRoomMessageEvent)(event).pipe(Option.map(event => ({ roomId, event })))),
+    Stream.map(({ roomId, events }) => ({ roomId, events: events.filter(event => event.type === 'm.room.message') })),
+    Stream.flatMap(({ roomId, events }) => Stream.fromArray(events).pipe(Stream.map(event => ({ roomId, event })))),
+    Stream.filterMap(({ roomId, event }) =>
+      Result.liftPredicate(isRoomMessageEvent, () => 'not room message')(event).pipe(Result.map(event => ({ roomId, event }))),
+    ),
     Stream.runForEach(
       Effect.fn('handleRoomMessage')(function* ({ roomId, event }) {
         yield* Effect.log(`Received message ${event.content.body} in room ${roomId}: ${JSON.stringify(event)}`)
@@ -99,31 +107,30 @@ const program = Effect.gen(function* () {
         }
       }),
     ),
-    Effect.fork,
+    Effect.forkChild,
   )
 
-  const syncLoop = Effect.iterate(
-    { nextBatch: Option.none<string>() },
-    {
-      body: ({ nextBatch }) =>
-        endpoints
-          .getSyncV3({
-            timeout: Duration.seconds(30),
-            since: nextBatch.pipe(Option.getOrUndefined),
-            fullState: nextBatch.pipe(Option.isNone),
-            filter: nextBatch.pipe(Option.match({ onNone: () => '{"room":{"timeline":{"limit":0}}}', onSome: () => undefined })),
-          })
-          .pipe(
-            Effect.andThen(matrixApi.execute),
-            Effect.tap(syncResponse => PubSub.publish(syncHub, syncResponse)),
-            Effect.andThen(syncResponse => ({ nextBatch: Option.some(syncResponse.nextBatch) })),
-          ),
-      while: () => true,
-    },
-  )
-
-  const syncLoopFiber = yield* Effect.forkDaemon(syncLoop)
-  yield* syncLoopFiber.await
+  let nextBatch = Option.none<string>()
+  //TODO: what happened to Effect.iterate 😢
+  yield* Effect.whileLoop({
+    step: () => true,
+    while: () => true,
+    body: () =>
+      endpoints
+        .getSyncV3({
+          timeout: Duration.seconds(30),
+          since: nextBatch.pipe(Option.getOrUndefined),
+          fullState: nextBatch.pipe(Option.isNone),
+          filter: nextBatch.pipe(Option.match({ onNone: () => '{"room":{"timeline":{"limit":0}}}', onSome: () => undefined })),
+        })
+        .pipe(
+          Effect.andThen(matrixApi.execute),
+          Effect.tap(syncResponse => PubSub.publish(syncHub, syncResponse)),
+          Effect.map(syncResponse => {
+            nextBatch = Option.some(syncResponse.nextBatch)
+          }),
+        ),
+  })
 })
 
 const mxfxLive = MatrixApi.layer.pipe(
@@ -131,6 +138,7 @@ const mxfxLive = MatrixApi.layer.pipe(
   Layer.provideMerge(InMemoryVault.layerConfig({ values: { accessToken: Config.string('MATRIX_ACCESS_TOKEN') } })),
   Layer.provideMerge(MatrixConfig.layerConfig({ serverName: Config.string('MATRIX_HOME_SERVER') })),
   Layer.provide(NodeHttpClient.layerUndici),
+  // Layer.provideMerge(Logger.layer([Logger.consoleStructured], {}))
 )
 
 NodeRuntime.runMain(program.pipe(Effect.scoped, Effect.provide(mxfxLive)))
