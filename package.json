@@ -1,34 +1,25 @@
 {
-  "name": "duckhunt",
-  "version": "1.0.0",
-  "description": "",
-  "main": "src/main.ts",
+  "name": "mxfx",
   "type": "module",
-  "scripts": {
-    "dev": "dotenv -- tsx --watch ./src/main.ts",
-    "build": "tsc",
-    "start": "node ./src/main.js",
-    "test": "vitest"
+  "version": "0.0.1",
+  "author": "Wouter de Bruijn <wouter@debruijn.dev>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/wouter173/mxfx.git"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "@effect/platform-node": "4.0.0-beta.28",
-    "@types/node": "^24.10.0",
+  "exports": {
+    ".": "./src/index.ts",
+    "./api": "./src/api/index.ts",
+    "./api/endpoints": "./src/api/endpoints/index.ts",
+    "./api/http-client": "./src/api/http-client/index.ts",
+    "./vault": "./src/vault/index.ts",
+    "./branded": "./src/branded/index.ts"
+  },
+  "peerDependencies": {
     "effect": "4.0.0-beta.28",
-    "mxfx": "workspace:*",
-    "nanoid": "^5.1.6"
+    "expo-secure-store": "^15.0.7"
   },
   "devDependencies": {
-    "@effect/language-service": "^0.76.0",
-    "@effect/vitest": "4.0.0-beta.28",
-    "vitest": "^3.0.0",
-    "dotenv-cli": "^11.0.0",
-    "expo-secure-store": "^15.0.7",
-    "prettier": "^3.8.1",
-    "prettier-plugin-jsdoc": "^1.8.0",
-    "tsx": "^4.19.4",
-    "typescript": "^5.8.3"
+    "@effect/vitest": "4.0.0-beta.28"
   }
 }
