@@ -1,4 +1,5 @@
 import { Schema } from 'effect'
+
 import { apiPath, makeEndpoint } from '../helpers'
 
 const responseSchema = Schema.Struct({
@@ -13,7 +14,6 @@ const responseSchema = Schema.Struct({
  * Gets discovery information about the domain. The file may include additional keys, which MUST follow the Java package naming convention,
  * e.g. com.example.myapp.property.
  *
- * @category Endpoints
  * @see https://spec.matrix.org/v1.17/client-server-api/#getwell-knownmatrixclient
  */
 export const getDiscoveryInformation = ({ serverName }: { serverName: string }) =>

@@ -1,5 +1,6 @@
-import { HttpClient, UrlParams } from 'effect/unstable/http'
 import { Effect, Layer, Result, Schema, ServiceMap } from 'effect'
+import { HttpClient, UrlParams } from 'effect/unstable/http'
+
 import { ApiHttpError } from '../error'
 import { MatrixApiErrorContentSchema } from '../schema/error'
 
@@ -41,5 +42,7 @@ const make = Effect.gen(function* () {
   )
 })
 
-export class BaseHttpClient extends ServiceMap.Service<BaseHttpClient>()('mxfx/BaseHttpClient', { make }) {}
+export class BaseHttpClient extends ServiceMap.Service<BaseHttpClient>()('mxfx/BaseHttpClient', {
+  make,
+}) {}
 export const layer = Layer.effect(BaseHttpClient, make)

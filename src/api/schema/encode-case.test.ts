@@ -1,5 +1,6 @@
 import { describe, it, expect } from '@effect/vitest'
 import { Effect, Schema } from 'effect'
+
 import { encodeSnakeCaseKeys } from './encode-case'
 
 describe('encode test', () => {
@@ -37,9 +38,15 @@ describe('encode test', () => {
         tags: Schema.Array(Schema.Struct({ tagName: Schema.String })),
       }).pipe(encodeSnakeCaseKeys)
 
-      const encoded = yield* Schema.encodeEffect(xSchema)({ userName: 'test', tags: [{ tagName: 'tag1' }, { tagName: 'tag2' }] })
+      const encoded = yield* Schema.encodeEffect(xSchema)({
+        userName: 'test',
+        tags: [{ tagName: 'tag1' }, { tagName: 'tag2' }],
+      })
 
-      expect(encoded).toEqual({ user_name: 'test', tags: [{ tag_name: 'tag1' }, { tag_name: 'tag2' }] })
+      expect(encoded).toEqual({
+        user_name: 'test',
+        tags: [{ tag_name: 'tag1' }, { tag_name: 'tag2' }],
+      })
     }),
   )
 
@@ -71,7 +78,10 @@ describe('encode test', () => {
         identifier: { type: 'user', userName: 'testuser' },
       })
 
-      expect(encoded).toEqual({ user_name: 'test', identifier: { type: 'user', user_name: 'testuser' } })
+      expect(encoded).toEqual({
+        user_name: 'test',
+        identifier: { type: 'user', user_name: 'testuser' },
+      })
     }),
   )
 
@@ -84,7 +94,9 @@ describe('encode test', () => {
         ]),
       }).pipe(encodeSnakeCaseKeys)
 
-      const encoded = yield* Schema.encodeEffect(xSchema)({ options: { type: 'email', emailAddress: 'test@example.com' } })
+      const encoded = yield* Schema.encodeEffect(xSchema)({
+        options: { type: 'email', emailAddress: 'test@example.com' },
+      })
 
       expect(encoded).toEqual({ options: { type: 'email', email_address: 'test@example.com' } })
     }),
@@ -194,7 +206,10 @@ describe('encode test', () => {
         nested: { userName: 'nested', nested: { userName: 'nested2' } },
       })
 
-      expect(encoded).toEqual({ user_name: 'test', nested: { user_name: 'nested', nested: { user_name: 'nested2' } } })
+      expect(encoded).toEqual({
+        user_name: 'test',
+        nested: { user_name: 'nested', nested: { user_name: 'nested2' } },
+      })
     }),
   )
 })

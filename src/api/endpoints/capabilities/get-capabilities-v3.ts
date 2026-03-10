@@ -1,4 +1,5 @@
 import { Schema } from 'effect'
+
 import { apiPath, makeEndpoint } from '../helpers'
 
 const booleanCapabilitySchema = Schema.Struct({
@@ -36,7 +37,6 @@ const responseSchema = Schema.Struct({
  *
  * Gets information about the server’s supported feature set and other relevant capabilities.
  *
- * @category Endpoints
  * @see https://spec.matrix.org/v1.17/client-server-api/#get_matrixclientv3capabilities
  */
 export const getCapabilitiesV3 = () =>

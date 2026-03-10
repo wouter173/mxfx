@@ -1,7 +1,8 @@
 import { Effect, Layer, ServiceMap } from 'effect'
-import { ApiHttpClient, AuthHttpClient, BaseHttpClient } from './http-client'
-import { makeHttpRequest, parseHttpResponse, type MatrixEndpoint } from './endpoints/helpers'
 import type { Schema } from 'effect'
+
+import { makeHttpRequest, parseHttpResponse, type MatrixEndpoint } from './endpoints/helpers'
+import { ApiHttpClient, AuthHttpClient } from './http-client'
 
 const make = Effect.gen(function* () {
   const authHttpClient = yield* AuthHttpClient.AuthHttpClient
@@ -19,7 +20,7 @@ const make = Effect.gen(function* () {
 
 export class MatrixApi extends ServiceMap.Service<MatrixApi>()('mxfxMatrixApi', { make }) {}
 export const layer = Layer.effect(MatrixApi, make).pipe(
-  Layer.provideMerge(BaseHttpClient.layer),
+  // Layer.provideMerge(BaseHttpClient.layer),
   Layer.provideMerge(ApiHttpClient.layer),
   Layer.provideMerge(AuthHttpClient.layer),
 )

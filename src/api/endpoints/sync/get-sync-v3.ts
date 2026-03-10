@@ -1,8 +1,9 @@
 import { Effect, Schema } from 'effect'
-import { apiPath, makeEndpoint } from '../helpers'
-import { AccountData, BaseEvent, StateSchema, StrippedStateEvent, Timeline } from '../../schema/common'
-import { RoomId } from '../../../branded/room-id'
+
 import { EventId } from '../../../branded/event-id'
+import { RoomId } from '../../../branded/room-id'
+import { AccountData, BaseEvent, StateSchema, StrippedStateEvent, Timeline } from '../../schema/common'
+import { apiPath, makeEndpoint } from '../helpers'
 
 const presenceSchema = Schema.Union([Schema.Literal('online'), Schema.Literal('offline'), Schema.Literal('unavailable')])
 
@@ -90,11 +91,11 @@ export const getSyncV3ResponseSchema = Schema.Struct({
 /**
  * `GET /_matrix/client/v3/sync`
  *
+ * @description
  * Synchronise the client’s state with the latest state on the server. Clients use this API when they first log in to get an initial
  * snapshot of the state on the server, and then continue to call this API to get incremental deltas to the state, and to receive new
  * messages.
  *
- * @category Endpoints
  * @see https://spec.matrix.org/v1.17/client-server-api/#get_matrixclientv3sync
  */
 export const getSyncV3 = (options: typeof optionsSchema.Type) =>

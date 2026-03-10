@@ -1,4 +1,5 @@
 import { Config, Effect, Layer, Option } from 'effect'
+
 import { Vault } from './vault'
 
 type MakeOpts = {

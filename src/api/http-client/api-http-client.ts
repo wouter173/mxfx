@@ -1,8 +1,9 @@
 import { Effect, Layer, ServiceMap } from 'effect'
-import { BaseHttpClient } from '.'
 import { HttpClientRequest } from 'effect/unstable/http'
 import { mapRequest } from 'effect/unstable/http/HttpClient'
-import { MatrixConfig } from '../..'
+
+import { BaseHttpClient } from '.'
+import { MatrixConfig } from '../../config'
 
 const make = Effect.gen(function* () {
   const baseHttpClient = yield* BaseHttpClient.BaseHttpClient

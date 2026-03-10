@@ -1,4 +1,5 @@
 import { Schema, Struct } from 'effect'
+
 import { EventId } from '../../branded/event-id'
 import { MxcUri } from '../../branded/mxc-uri'
 import { RoomId } from '../../branded/room-id'

@@ -1,4 +1,5 @@
 import { Schema } from 'effect'
+
 import { ServerName } from './server-name'
 
 const localpart = Schema.String.check(Schema.isMaxLength(255), Schema.isPattern(/^[A-Za-z0-9]+$/u))

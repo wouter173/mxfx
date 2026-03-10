@@ -13,9 +13,10 @@
     "noUncheckedIndexedAccess": true,
     "noImplicitOverride": true,
     "module": "preserve",
-    "outDir": "dist",
+    "rootDir": "./src",
+    "outDir": "./dist",
     "sourceMap": true,
-    "lib": ["es2022"],
+    "lib": ["es2022", "DOM"],
     "plugins": [{ "name": "@effect/language-service" }]
   }
 }

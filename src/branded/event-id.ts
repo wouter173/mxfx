@@ -1,6 +1,7 @@
 import { Schema } from 'effect'
-import { ServerName } from './server-name'
+
 import { opaqueId } from './opaque-id'
+import { ServerName } from './server-name'
 
 const schema = Schema.Union([
   Schema.TemplateLiteral(['$', opaqueId, ':', ServerName.schema]),

@@ -1,7 +1,7 @@
-import { Effect } from 'effect'
-import { ServerName } from './server-name'
-
 import { describe, expect, it } from '@effect/vitest'
+import { Effect } from 'effect'
+
+import { ServerName } from './server-name'
 
 describe('Valid ServerNames', () => {
   it.live('matrix.org', () => ServerName.make('matrix.org').pipe(Effect.map(x => expect(x).toBe('matrix.org'))))

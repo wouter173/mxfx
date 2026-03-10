@@ -1,7 +1,8 @@
-import { Effect, Schema } from 'effect'
-import { apiPath, makeEndpoint } from '../helpers'
+import { Schema } from 'effect'
+
 import { MxcUri } from '../../../branded/mxc-uri'
 import { UserId } from '../../../branded/user-id'
+import { apiPath, makeEndpoint } from '../helpers'
 
 const responseSchema = Schema.Struct({
   avatarUrl: Schema.optional(Schema.NullOr(MxcUri.schema)),
@@ -14,10 +15,10 @@ const responseSchema = Schema.Struct({
 /**
  * `GET /_matrix/client/v3/profile/{userId}`
  *
+ * @description
  * Get the combined profile information for this user. This API may be used to fetch the user’s own profile information or other users;
  * either locally or on remote homeservers.
  *
- * @category Endpoints
  * @see https://spec.matrix.org/v1.17/client-server-api/#get_matrixclientv3profileuserid
  */
 export const getProfileV3 = ({ userId }: { userId: UserId }) =>

@@ -1,7 +1,7 @@
-import { Effect, Exit } from 'effect'
-import { RoomId } from './room-id'
-
 import { describe, expect, it } from '@effect/vitest'
+import { Effect, Exit } from 'effect'
+
+import { RoomId } from './room-id'
 
 describe('branded', () => {
   it.effect('should be valid RoomId', () =>

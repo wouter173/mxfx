@@ -1,7 +1,7 @@
-import { Effect } from 'effect'
-import { EventId } from './event-id'
-
 import { describe, expect, it } from '@effect/vitest'
+import { Effect } from 'effect'
+
+import { EventId } from './event-id'
 
 const maxLengthWithServer = `$${'a'.repeat(243)}:matrix.org`
 const tooLongWithServer = `$${'a'.repeat(244)}:matrix.org`

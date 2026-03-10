@@ -1,4 +1,5 @@
 import { Schema } from 'effect'
+
 import { apiPath, makeEndpoint } from '../helpers'
 
 const responseSchema = Schema.Struct({
@@ -11,7 +12,6 @@ const responseSchema = Schema.Struct({
  * Gets the homeserver’s supported login types to authenticate users. Clients should pick one of these and supply it as the type when
  * logging in.
  *
- * @category Endpoints
  * @see https://spec.matrix.org/v1.17/client-server-api/#get_matrixclientv3login
  */
 export const getLoginV3 = () =>

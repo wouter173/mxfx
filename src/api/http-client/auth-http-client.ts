@@ -1,8 +1,9 @@
-import { Effect, Layer, ServiceMap, Option } from 'effect'
+import { Effect, Layer, ServiceMap } from 'effect'
+import { HttpClientRequest } from 'effect/unstable/http'
 import { mapRequestEffect } from 'effect/unstable/http/HttpClient'
+
 import { ApiHttpClient } from '.'
 import { Vault } from '../../vault'
-import { HttpClientRequest } from 'effect/unstable/http'
 
 const make = Effect.gen(function* () {
   const apiHttpClient = yield* ApiHttpClient.ApiHttpClient
@@ -19,5 +20,7 @@ const make = Effect.gen(function* () {
   )
 })
 
-export class AuthHttpClient extends ServiceMap.Service<AuthHttpClient>()('mxfx/AuthHttpClient', { make }) {}
+export class AuthHttpClient extends ServiceMap.Service<AuthHttpClient>()('mxfx/AuthHttpClient', {
+  make,
+}) {}
 export const layer = Layer.effect(AuthHttpClient, make).pipe(Layer.provide(ApiHttpClient.layer))

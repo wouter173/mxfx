@@ -1,8 +1,9 @@
 import { describe, expect, it } from '@effect/vitest'
 import { Effect, Schema } from 'effect'
+
+import { RoomId } from '../../../branded'
 import { encodeSnakeCaseSchema } from '../../schema/encode-case'
 import { getSyncV3ResponseSchema } from './get-sync-v3'
-import { RoomId } from '../../../branded'
 
 describe('getSyncV3ResponseSchema', () => {
   it.effect('decodes and encodes a full snake_case sync payload', () =>
@@ -10,7 +11,9 @@ describe('getSyncV3ResponseSchema', () => {
       const schema = getSyncV3ResponseSchema.pipe(encodeSnakeCaseSchema)
 
       const payload = {
-        account_data: { events: [{ type: 'm.tag', content: { tags: { 'm.favourite': { order: 0.5 } } } }] },
+        account_data: {
+          events: [{ type: 'm.tag', content: { tags: { 'm.favourite': { order: 0.5 } } } }],
+        },
         device_lists: { changed: ['@alice:example.org'], left: [] },
         device_one_time_keys_count: { signed_curve25519: 42 },
         next_batch: 's72595_4483_1934',
@@ -35,7 +38,9 @@ describe('getSyncV3ResponseSchema', () => {
           join: {
             '!joinedroom:example.org': {
               account_data: { events: [{ type: 'm.fully_read', content: { event_id: '$e1' } }] },
-              ephemeral: { events: [{ type: 'm.typing', content: { user_ids: ['@alice:example.org'] } }] },
+              ephemeral: {
+                events: [{ type: 'm.typing', content: { user_ids: ['@alice:example.org'] } }],
+              },
               state: {
                 events: [
                   {
@@ -171,7 +176,13 @@ describe('getSyncV3ResponseSchema', () => {
           },
         },
         to_device: {
-          events: [{ type: 'm.room_key', sender: '@alice:example.org', content: { algorithm: 'm.megolm.v1.aes-sha2' } }],
+          events: [
+            {
+              type: 'm.room_key',
+              sender: '@alice:example.org',
+              content: { algorithm: 'm.megolm.v1.aes-sha2' },
+            },
+          ],
         },
       }
 

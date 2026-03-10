@@ -1,5 +1,6 @@
-import { HttpBody, HttpClientRequest, HttpClientResponse, UrlParams } from 'effect/unstable/http'
 import { Effect, Schema } from 'effect'
+import { HttpBody, HttpClientRequest, HttpClientResponse, UrlParams } from 'effect/unstable/http'
+
 import { encodeSnakeCaseSchema } from '../schema/encode-case'
 
 export type MatrixEndpoint<S extends Schema.Top> = {
@@ -18,15 +19,17 @@ export type MatrixEndpoint<S extends Schema.Top> = {
 export const makeEndpoint = <S extends Schema.Top>(endpoint: MatrixEndpoint<S>) => Effect.succeed(endpoint)
 
 export const makeHttpRequest = <S extends Schema.Top>(endpoint: MatrixEndpoint<S>) =>
-  Effect.gen(function* () {
-    return HttpClientRequest.make(endpoint.method)(endpoint.path, {
+  Effect.succeed(
+    HttpClientRequest.make(endpoint.method)(endpoint.path, {
       body: endpoint.body ? endpoint.body : HttpBody.empty,
       urlParams: endpoint.params ? endpoint.params : UrlParams.empty,
-    })
-  })
+    }),
+  )
 
 export const parseHttpResponse = <S extends Schema.Top>(endpoint: MatrixEndpoint<S>) =>
-  HttpClientResponse.schemaBodyJson(endpoint.schema.pipe(encodeSnakeCaseSchema), { onExcessProperty: 'preserve' })
+  HttpClientResponse.schemaBodyJson(endpoint.schema.pipe(encodeSnakeCaseSchema), {
+    onExcessProperty: 'preserve',
+  })
 
 export const pathBrandSchema = Schema.String.pipe(Schema.brand('mxfx/api/path'))
 

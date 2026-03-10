@@ -1,7 +1,8 @@
 import { Config, Effect, Layer, ServiceMap } from 'effect'
+
 import { getDiscoveryInformation } from '../api/endpoints/discovery/get-well-known'
-import * as BaseHttpClient from '../api/http-client/base-http-client'
 import { makeHttpRequest, parseHttpResponse } from '../api/endpoints/helpers'
+import * as BaseHttpClient from '../api/http-client/base-http-client'
 
 type MatrixConfigService = {
   serverName: string

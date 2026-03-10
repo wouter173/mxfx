@@ -1,7 +1,7 @@
 import { Schema } from 'effect'
 
 const ipv4 = Schema.String.check(
-  Schema.isPattern(/^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$/),
+  Schema.isPattern(/^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9-]*[A-Za-z0-9])$/),
 )
 const ipv6 = Schema.String.check(
   Schema.isPattern(

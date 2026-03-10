@@ -1,8 +1,9 @@
+import { Effect, Schema } from 'effect'
 import { HttpBody } from 'effect/unstable/http'
-import { Effect, Schema, String as Str, Struct, Tuple } from 'effect'
-import { apiPath, makeEndpoint } from '../helpers'
-import { DiscoveryInformationResponseSchema } from '../../schema/rest'
+
 import { encodeSnakeCaseSchema } from '../../schema/encode-case'
+import { DiscoveryInformationResponseSchema } from '../../schema/rest'
+import { apiPath, makeEndpoint } from '../helpers'
 
 const commonOptionsSchema = Schema.Struct({
   initialDeviceDisplayName: Schema.optional(Schema.String),
@@ -40,7 +41,6 @@ const responseSchema = Schema.Struct({
  *
  * Authenticates the user, and issues an access token they can use to authorize themself in subsequent requests.
  *
- * @category Endpoints
  * @see https://spec.matrix.org/v1.17/client-server-api/#post_matrixclientv3login
  */
 export const postLoginV3 = (options: Schema.Schema.Type<typeof optionsSchema>) =>

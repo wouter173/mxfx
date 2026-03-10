@@ -1,25 +1,36 @@
 {
   "name": "mxfx",
-  "type": "module",
   "version": "0.0.1",
   "author": "Wouter de Bruijn <wouter@debruijn.dev>",
   "repository": {
     "type": "git",
     "url": "https://github.com/wouter173/mxfx.git"
   },
+  "type": "module",
   "exports": {
     ".": "./src/index.ts",
     "./api": "./src/api/index.ts",
     "./api/endpoints": "./src/api/endpoints/index.ts",
     "./api/http-client": "./src/api/http-client/index.ts",
+    "./api/schema": "./src/api/schema/index.ts",
+    "./config": "./src/config/index.ts",
     "./vault": "./src/vault/index.ts",
     "./branded": "./src/branded/index.ts"
   },
-  "peerDependencies": {
-    "effect": "4.0.0-beta.28",
-    "expo-secure-store": "^15.0.7"
+  "scripts": {
+    "fmt": "oxfmt",
+    "fmt:check": "oxfmt --check",
+    "lint": "oxlint",
+    "lint:fix": "oxlint --fix"
   },
   "devDependencies": {
-    "@effect/vitest": "4.0.0-beta.28"
+    "@effect/vitest": "4.0.0-beta.28",
+    "@types/node": "^24.10.0",
+    "oxfmt": "^0.36.0",
+    "oxlint": "^1.52.0",
+    "oxlint-tsgolint": "^0.16.0"
+  },
+  "peerDependencies": {
+    "effect": "4.0.0-beta.28"
   }
 }

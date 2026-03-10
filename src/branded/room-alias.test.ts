@@ -1,7 +1,7 @@
-import { Effect } from 'effect'
-import { RoomAlias } from './room-alias'
-
 import { describe, expect, it } from '@effect/vitest'
+import { Effect } from 'effect'
+
+import { RoomAlias } from './room-alias'
 
 const maxLengthAlias = `#${'a'.repeat(243)}:matrix.org`
 const tooLongAlias = `#${'a'.repeat(250)}:matrix.org`

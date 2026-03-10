@@ -1,7 +1,7 @@
-import { Effect, Exit } from 'effect'
-import { UserId } from './user-id'
-
 import { describe, expect, it } from '@effect/vitest'
+import { Effect, Exit } from 'effect'
+
+import { UserId } from './user-id'
 
 describe('branded', () => {
   it.effect('should be valid UserId', () =>

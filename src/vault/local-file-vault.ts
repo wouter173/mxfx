@@ -1,4 +1,5 @@
 import { Effect, FileSystem, Layer, Option, Path } from 'effect'
+
 import { Vault, VaultError } from './vault'
 
 export type MakeOpts = {
