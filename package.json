@@ -7,6 +7,7 @@
     "url": "https://github.com/wouter173/mxfx.git"
   },
   "type": "module",
+  "sideEffects": [],
   "exports": {
     ".": "./src/index.ts",
     "./api": "./src/api/index.ts",
@@ -24,13 +25,13 @@
     "lint:fix": "oxlint --fix"
   },
   "devDependencies": {
-    "@effect/vitest": "4.0.0-beta.28",
+    "@effect/vitest": "4.0.0-beta.31",
     "@types/node": "^24.10.0",
     "oxfmt": "^0.36.0",
     "oxlint": "^1.52.0",
     "oxlint-tsgolint": "^0.16.0"
   },
   "peerDependencies": {
-    "effect": "4.0.0-beta.28"
+    "effect": "4.0.0-beta.31"
   }
 }
