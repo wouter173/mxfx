@@ -1,5 +1,6 @@
 import { Schema } from 'effect'
 
+import type { ServerName } from '../../../branded/server-name'
 import { apiPath, makeEndpoint } from '../helpers'
 
 const responseSchema = Schema.Struct({
@@ -16,7 +17,7 @@ const responseSchema = Schema.Struct({
  *
  * @see https://spec.matrix.org/v1.17/client-server-api/#getwell-knownmatrixclient
  */
-export const getDiscoveryInformation = ({ serverName }: { serverName: string }) =>
+export const getWellKnown = ({ serverName }: { serverName: ServerName }) =>
   makeEndpoint({
     path: apiPath({ encode: false })`https://${serverName}/.well-known/matrix/client`,
     method: 'GET',

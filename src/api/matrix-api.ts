@@ -19,8 +19,8 @@ const make = Effect.gen(function* () {
 })
 
 export class MatrixApi extends ServiceMap.Service<MatrixApi>()('mxfxMatrixApi', { make }) {}
-export const layer = Layer.effect(MatrixApi, make).pipe(
-  // Layer.provideMerge(BaseHttpClient.layer),
-  Layer.provideMerge(ApiHttpClient.layer),
-  Layer.provideMerge(AuthHttpClient.layer),
-)
+
+const layerDependencies = Layer.mergeAll(ApiHttpClient.layer, AuthHttpClient.layer)
+
+export const layerWithoutDependencies = Layer.effect(MatrixApi, make)
+export const layer = layerWithoutDependencies.pipe(Layer.provide(layerDependencies))

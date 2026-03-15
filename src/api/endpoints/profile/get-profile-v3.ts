@@ -28,3 +28,10 @@ export const getProfileV3 = ({ userId }: { userId: UserId }) =>
     auth: true,
     schema: responseSchema,
   })
+
+/*
+ * TODO: explore this pattern:
+ * The idea is to have the endpoints be branded or tagged so they can only be used with the correct client.
+ * This is especially useful for discovery endpoints that that live outside the api.
+ */
+// apiEndpoint({method: 'GET', schema})`/v3/profile/${userId}`
