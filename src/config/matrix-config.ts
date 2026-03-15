@@ -14,7 +14,7 @@ export class MatrixConfig extends ServiceMap.Service<MatrixConfig, typeof Matrix
 
 export const make = (opts: MakeOpts) =>
   Effect.gen(function* () {
-    const serverName = yield* ServerName.makeEffect(opts.serverName)
+    const serverName = yield* ServerName.make(opts.serverName)
 
     yield* Effect.logDebug(`Creating MatrixConfig for server: ${serverName}`)
     const baseHttpClient = yield* BaseHttpClient.BaseHttpClient
