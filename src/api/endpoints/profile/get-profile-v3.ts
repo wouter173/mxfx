@@ -2,9 +2,9 @@ import { Schema } from 'effect'
 
 import { MxcUri } from '../../../branded/mxc-uri'
 import { UserId } from '../../../branded/user-id'
-import { apiPath, makeEndpoint } from '../helpers'
+import { makeEndpoint } from '../helpers'
 
-const responseSchema = Schema.Struct({
+const schema = Schema.Struct({
   avatarUrl: Schema.optional(Schema.NullOr(MxcUri.schema)),
   displayname: Schema.optional(Schema.String),
   //TODO: Make versioned fields
@@ -21,13 +21,7 @@ const responseSchema = Schema.Struct({
  *
  * @see https://spec.matrix.org/v1.17/client-server-api/#get_matrixclientv3profileuserid
  */
-export const getProfileV3 = ({ userId }: { userId: UserId }) =>
-  makeEndpoint({
-    path: apiPath()`/v3/profile/${userId}`,
-    method: 'GET',
-    auth: true,
-    schema: responseSchema,
-  })
+export const getProfileV3 = ({ userId }: { userId: UserId }) => makeEndpoint('GET', { auth: true, schema })`/v3/profile/${userId}`
 
 /*
  * TODO: explore this pattern:

@@ -183,3 +183,12 @@ export const Timeline = Schema.Struct({
 })
 
 export const StateSchema = Schema.Struct({ events: Schema.Array(ClientEventWithoutRoomId) })
+
+export const RoomEvent = Schema.Union([
+  ClientEvent,
+  RoomMessageEvent,
+  RoomNameEventPartial,
+  RoomTopicEventPartial,
+  RoomAvatarEventPartial,
+  RoomPinnedEventsEventPartial,
+])

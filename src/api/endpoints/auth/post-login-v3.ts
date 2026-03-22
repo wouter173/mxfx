@@ -3,7 +3,7 @@ import { HttpBody } from 'effect/unstable/http'
 
 import { encodeSnakeCaseSchema } from '../../schema/encode-case'
 import { DiscoveryInformationResponseSchema } from '../../schema/rest'
-import { apiPath, makeEndpoint } from '../helpers'
+import { makeEndpoint } from '../helpers'
 
 const commonOptionsSchema = Schema.Struct({
   initialDeviceDisplayName: Schema.optional(Schema.String),
@@ -27,7 +27,7 @@ const optionsSchema = Schema.Union([
   }),
 ])
 
-const responseSchema = Schema.Struct({
+const schema = Schema.Struct({
   accessToken: Schema.String,
   deviceId: Schema.String,
   userId: Schema.String,
@@ -47,11 +47,6 @@ export const postLoginV3 = (options: Schema.Schema.Type<typeof optionsSchema>) =
   Effect.gen(function* () {
     //TODO: this is weird encodeSnakeCaseSchema should not be exposed like this
     const body = yield* Schema.encodeEffect(optionsSchema.pipe(encodeSnakeCaseSchema))(options).pipe(Effect.andThen(HttpBody.json))
-    return yield* makeEndpoint({
-      auth: false,
-      method: 'POST',
-      path: apiPath()`/v3/login`,
-      body,
-      schema: responseSchema,
-    })
+
+    return yield* makeEndpoint('POST', { auth: false, body, schema })`/v3/login`
   })

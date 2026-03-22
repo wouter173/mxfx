@@ -3,9 +3,9 @@ import { HttpBody } from 'effect/unstable/http'
 
 import { EventId, RoomId } from '../../../branded'
 import { encodeSnakeCaseSchema } from '../../schema/encode-case'
-import { makeEndpoint, apiPath } from '../helpers'
+import { makeEndpoint } from '../helpers'
 
-const responseSchema = Schema.Struct({
+const schema = Schema.Struct({
   eventId: EventId.schema,
 })
 
@@ -60,11 +60,5 @@ export const putRoomsSendV3 = (options: typeof optionsSchema.Type) =>
 
     const transactionId = options.transactionId ? options.transactionId : yield* Random.nextUUIDv4
 
-    return yield* makeEndpoint({
-      path: apiPath()`/v3/rooms/${options.roomId}/send/${options.eventType}/${transactionId}`,
-      method: 'PUT',
-      auth: true,
-      schema: responseSchema,
-      body,
-    })
+    return yield* makeEndpoint('PUT', { auth: true, schema, body })`/v3/rooms/${options.roomId}/send/${options.eventType}/${transactionId}`
   })

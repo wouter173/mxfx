@@ -3,7 +3,7 @@ import { Effect, Schema } from 'effect'
 import { EventId } from '../../../branded/event-id'
 import { RoomId } from '../../../branded/room-id'
 import { AccountData, BaseEvent, StateSchema, StrippedStateEvent, Timeline } from '../../schema/common'
-import { apiPath, makeEndpoint } from '../helpers'
+import { makeEndpoint } from '../helpers'
 
 const presenceSchema = Schema.Union([Schema.Literal('online'), Schema.Literal('offline'), Schema.Literal('unavailable')])
 
@@ -16,6 +16,7 @@ const optionsSchema = Schema.Struct({
   useStateAfter: Schema.optional(Schema.Boolean),
 })
 
+//TODO: don't export this from here, it's noy only used in this endpoint
 export const getSyncV3ResponseSchema = Schema.Struct({
   accountData: Schema.optional(AccountData),
   deviceLists: Schema.optional(Schema.Any), //TODO
@@ -88,6 +89,8 @@ export const getSyncV3ResponseSchema = Schema.Struct({
   toDevice: Schema.optional(Schema.Struct({ events: Schema.Array(BaseEvent) })),
 })
 
+const schema = getSyncV3ResponseSchema
+
 /**
  * `GET /_matrix/client/v3/sync`
  *
@@ -102,11 +105,9 @@ export const getSyncV3 = (options: typeof optionsSchema.Type) =>
   Effect.gen(function* () {
     const params = yield* Schema.encodeEffect(optionsSchema)(options)
 
-    return yield* makeEndpoint({
-      path: apiPath()`/v3/sync`,
-      method: 'GET',
+    return yield* makeEndpoint('GET', {
       auth: true,
       params,
-      schema: getSyncV3ResponseSchema,
-    })
+      schema,
+    })`/v3/sync`
   })
