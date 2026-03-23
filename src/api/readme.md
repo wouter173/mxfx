@@ -31,7 +31,7 @@ Endpoints:
 - [ ] POST /\_matrix/client/v3/user/{userId}/filter
 - [ ] GET /\_matrix/client/v3/user/{userId}/filter/{filterId}
 - [x] GET /\_matrix/client/v3/sync
-- [ ] GET /\_matrix/client/v3/rooms/{roomId}/event/{eventId}
+- [x] GET /\_matrix/client/v3/rooms/{roomId}/event/{eventId}
 - [ ] GET /\_matrix/client/v3/rooms/{roomId}/joined_members
 - [ ] GET /\_matrix/client/v3/rooms/{roomId}/members
 - [ ] GET /\_matrix/client/v3/rooms/{roomId}/state

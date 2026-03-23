@@ -105,9 +105,5 @@ export const getSyncV3 = (options: typeof optionsSchema.Type) =>
   Effect.gen(function* () {
     const params = yield* Schema.encodeEffect(optionsSchema)(options)
 
-    return yield* makeEndpoint('GET', {
-      auth: true,
-      params,
-      schema,
-    })`/v3/sync`
+    return yield* makeEndpoint('GET', { auth: true, params, schema })`/v3/sync`
   })

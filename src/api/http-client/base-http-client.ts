@@ -10,14 +10,14 @@ const make = Effect.gen(function* () {
   return httpClient.pipe(
     HttpClient.tapRequest(req =>
       Effect.logDebug(
-        `Matrix API Request: ${req.method} ${Result.getOrElse(UrlParams.makeUrl(req.url, req.urlParams, req.hash), () => '')}`,
+        `Matrix API Request: ${req.method} ${Result.getOrElse(UrlParams.makeUrl(req.url, req.urlParams, req.hash.valueOrUndefined), () => '')}`,
         req.body,
       ),
     ),
     HttpClient.filterOrElse(
       res => res.status >= 200 && res.status < 400,
       res =>
-        res.text.pipe(
+        res.json.pipe(
           Effect.andThen(Schema.decodeUnknownEffect(MatrixApiErrorContentSchema)),
           Effect.catch(err =>
             Effect.logError(`Failed to decode MatrixApiErrorContent: ${err}`).pipe(

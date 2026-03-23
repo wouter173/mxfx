@@ -2,7 +2,7 @@ import { Config, Effect, Layer, Schema, ServiceMap } from 'effect'
 
 import { getWellKnown } from '../api/endpoints/discovery/get-well-known'
 import { makeHttpRequest, parseHttpResponse } from '../api/endpoints/helpers'
-import * as BaseHttpClient from '../api/http-client/base-http-client'
+import { BaseHttpClient } from '../api/http-client'
 import { ServerName } from '../branded/server-name'
 
 const MatrixConfigSchema = Schema.Struct({

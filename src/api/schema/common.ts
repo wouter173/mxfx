@@ -186,9 +186,9 @@ export const StateSchema = Schema.Struct({ events: Schema.Array(ClientEventWitho
 
 export const RoomEvent = Schema.Union([
   ClientEvent,
-  RoomMessageEvent,
-  RoomNameEventPartial,
-  RoomTopicEventPartial,
-  RoomAvatarEventPartial,
-  RoomPinnedEventsEventPartial,
+  Schema.Struct({ ...ClientEvent.fields, ...RoomNameEventPartial.fields }),
+  Schema.Struct({ ...ClientEvent.fields, ...RoomTopicEventPartial.fields }),
+  Schema.Struct({ ...ClientEvent.fields, ...RoomAvatarEventPartial.fields }),
+  Schema.Struct({ ...ClientEvent.fields, ...RoomPinnedEventsEventPartial.fields }),
+  Schema.Struct({ ...ClientEvent.fields, ...RoomMessageEventPartial.fields }),
 ])
