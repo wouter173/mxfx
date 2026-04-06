@@ -12,8 +12,5 @@
     "typeRoots": ["./types"]
   },
   "include": ["src/**/*"],
-  "exclude": [
-    "src/**/*.test.ts",
-    "src/**/*.spec.ts"
-  ]
+  "exclude": ["src/**/*.test.ts", "src/**/*.spec.ts"]
 }
