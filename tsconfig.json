@@ -1,22 +1,7 @@
 {
-  "compilerOptions": {
-    "moduleResolution": "bundler",
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "target": "es2022",
-    "allowJs": true,
-    "resolveJsonModule": true,
-    "moduleDetection": "force",
-    "isolatedModules": true,
-    "verbatimModuleSyntax": true,
-    "strict": true,
-    "noUncheckedIndexedAccess": true,
-    "noImplicitOverride": true,
-    "module": "preserve",
-    "rootDir": "./src",
-    "outDir": "./dist",
-    "sourceMap": true,
-    "lib": ["es2022", "DOM"],
-    "plugins": [{ "name": "@effect/language-service" }]
-  }
+  "extends": "./tsconfig.base.json",
+  "references": [
+    { "path": "./tsconfig.test.json" },
+    { "path": "./tsconfig.lib.json" }
+  ]
 }
