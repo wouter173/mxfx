@@ -132,9 +132,10 @@ export const RoomMessageEventPartial = Schema.Struct({
 // room state events
 export const RoomNameEventPartial = Schema.Struct({
   type: Schema.Literal('m.room.name'),
-  content: Schema.Struct({
-    name: Schema.String,
-  }),
+  content: Schema.StructWithRest(
+    Schema.Struct({ name: Schema.String }), //
+    [Schema.Record(Schema.String, Schema.Any)],
+  ),
 })
 
 export const RoomTopicEventPartial = Schema.Struct({
@@ -171,24 +172,19 @@ export const AccountData = Schema.Struct({
   events: Schema.Array(BaseEvent),
 })
 
-export const RoomMessageEvent = Schema.Struct({
-  ...ClientEventWithoutRoomId.fields,
-  ...RoomMessageEventPartial.fields,
-})
-
-export const Timeline = Schema.Struct({
-  events: Schema.optional(Schema.Array(Schema.Union([ClientEventWithoutRoomId, RoomMessageEvent]))),
-  limited: Schema.optional(Schema.Boolean),
-  prevBatch: Schema.optional(Schema.String),
-})
-
 export const StateSchema = Schema.Struct({ events: Schema.Array(ClientEventWithoutRoomId) })
 
 export const RoomEvent = Schema.Union([
-  ClientEvent,
-  Schema.Struct({ ...ClientEvent.fields, ...RoomNameEventPartial.fields }),
-  Schema.Struct({ ...ClientEvent.fields, ...RoomTopicEventPartial.fields }),
-  Schema.Struct({ ...ClientEvent.fields, ...RoomAvatarEventPartial.fields }),
-  Schema.Struct({ ...ClientEvent.fields, ...RoomPinnedEventsEventPartial.fields }),
-  Schema.Struct({ ...ClientEvent.fields, ...RoomMessageEventPartial.fields }),
+  ClientEventWithoutRoomId,
+  Schema.Struct({ ...ClientEventWithoutRoomId.fields, ...RoomNameEventPartial.fields }),
+  Schema.Struct({ ...ClientEventWithoutRoomId.fields, ...RoomTopicEventPartial.fields }),
+  Schema.Struct({ ...ClientEventWithoutRoomId.fields, ...RoomAvatarEventPartial.fields }),
+  Schema.Struct({ ...ClientEventWithoutRoomId.fields, ...RoomPinnedEventsEventPartial.fields }),
+  Schema.Struct({ ...ClientEventWithoutRoomId.fields, ...RoomMessageEventPartial.fields }),
 ])
+
+export const Timeline = Schema.Struct({
+  events: Schema.optional(Schema.Array(RoomEvent)),
+  limited: Schema.optional(Schema.Boolean),
+  prevBatch: Schema.optional(Schema.String),
+})
