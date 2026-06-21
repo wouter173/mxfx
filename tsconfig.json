@@ -1,7 +1,13 @@
 {
   "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "noEmit": true,
+    "paths": {
+      "mxfx/*": ["./packages/mxfx/*"]
+    }
+  },
   "references": [
     // { "path": "./tsconfig.test.json" },
-    { "path": "./tsconfig.lib.json" }
   ]
 }

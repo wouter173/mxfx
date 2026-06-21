@@ -1,0 +1,7 @@
+export * as MatrixAuth from './auth/index.ts'
+export * as MatrixApi from './api/index.ts'
+export * as MatrixClient from './client/index.ts'
+export * as MatrixConfig from './config/index.ts'
+export * as Vault from './vault/index.ts'
+export * as Store from './store/index.ts'
+export * from './branded/index.ts'

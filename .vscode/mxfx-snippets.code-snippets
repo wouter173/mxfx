@@ -18,25 +18,25 @@
   "effect-gen": {
     "scope": "typescript",
     "prefix": "egen",
-    "body": "Effect.gen(function* () {${0}})"
+    "body": "Effect.gen(function* () {${0}})",
   },
   "effect-gen-fn": {
     "scope": "typescript",
     "prefix": "egenfn",
-    "body": "(${1}) => Effect.gen(function* () {${0}})"
+    "body": "(${1}) => Effect.gen(function* () {${0}})",
   },
   "effect-fn": {
     "scope": "typescript",
     "prefix": "efn",
-    "body": "Effect.fn(function* () {${0}})"
+    "body": "Effect.fn(function* () {${0}})",
   },
 
   "mxfx-get-endpoint": {
     "scope": "typescript",
     "prefix": "mxfx-endpoint-get",
     "body": [
-      "import { Schema } from 'effect'",
-      "import { makeEndpoint } from '@/matrix-endpoint'",
+      "import { Schema } from 'effect.ts'",
+      "import { makeEndpoint } from '@/matrix-endpoint.ts'",
       "",
       "const responseSchema = Schema.Struct({${0}})",
       "",
@@ -55,7 +55,7 @@
       "    auth: ${5:true},",
       "    schema: responseSchema,",
       "  })",
-      ""
-    ]
-  }
+      "",
+    ],
+  },
 }

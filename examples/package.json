@@ -1,0 +1,12 @@
+{
+  "name": "example",
+  "version": "1.0.0",
+  "keywords": [],
+  "author": "",
+  "type": "module",
+  "dependencies": {
+    "@effect/platform-node": "4.0.0-beta.84",
+    "effect": "4.0.0-beta.84",
+    "mxfx": "workspace:^"
+  }
+}

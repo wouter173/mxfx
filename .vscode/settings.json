@@ -1,6 +1,7 @@
 {
   "editor.formatOnSave": true,
-  "[typescript]": {
-    "editor.defaultFormatter": "oxc.oxc-vscode"
-  }
+  "[typescript]": { "editor.defaultFormatter": "oxc.oxc-vscode" },
+  "[snippets]": { "editor.defaultFormatter": "oxc.oxc-vscode" },
+  "[json]": { "editor.defaultFormatter": "oxc.oxc-vscode" },
+  "[markdown]": { "editor.defaultFormatter": "oxc.oxc-vscode" }
 }
