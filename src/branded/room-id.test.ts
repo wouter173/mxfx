@@ -9,7 +9,8 @@ describe('branded', () => {
       expect(yield* RoomId.make('!roomid:matrix.org')).toBe('!roomid:matrix.org')
       expect(yield* RoomId.make('!anotherRoomId:example.com')).toBe('!anotherRoomId:example.com')
       expect(yield* RoomId.make('!dPxdtArDbghGKRocWe:maishond.nl')).toBe('!dPxdtArDbghGKRocWe:maishond.nl')
-      // expect(yield* RoomId.make('!roomid')).toBe('!roomid')
+      expect(yield* RoomId.make('!dPxdtArDbghGKRocWe:maishond.nl:4505')).toBe('!dPxdtArDbghGKRocWe:maishond.nl:4505')
+      expect(yield* RoomId.make('!-0pu2RFgV2MhbtmK9mSqhSfGlI3Zjh62kaY0TQPbu2c')).toBe('!-0pu2RFgV2MhbtmK9mSqhSfGlI3Zjh62kaY0TQPbu2c')
     }),
   )
 

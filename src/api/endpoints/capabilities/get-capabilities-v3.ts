@@ -1,6 +1,6 @@
 import { Schema } from 'effect'
 
-import { apiPath, makeEndpoint } from '../helpers'
+import { makeEndpoint } from '../endpoint'
 
 const booleanCapabilitySchema = Schema.Struct({
   enabled: Schema.Boolean,
@@ -17,7 +17,7 @@ const roomVersionsCapability = Schema.Struct({
   available: Schema.Record(Schema.String, Schema.String),
 })
 
-const responseSchema = Schema.Struct({
+const schema = Schema.Struct({
   capabilities: Schema.Struct({
     'm.3pid_changes': booleanCapabilitySchema,
     'm.change_password': booleanCapabilitySchema,
@@ -39,10 +39,4 @@ const responseSchema = Schema.Struct({
  *
  * @see https://spec.matrix.org/v1.17/client-server-api/#get_matrixclientv3capabilities
  */
-export const getCapabilitiesV3 = () =>
-  makeEndpoint({
-    path: apiPath()`/v3/capabilities`,
-    method: 'GET',
-    auth: true,
-    schema: responseSchema,
-  })
+export const getCapabilitiesV3 = () => makeEndpoint('GET', { auth: true, schema })`/v3/capabilities`

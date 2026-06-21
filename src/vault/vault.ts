@@ -1,11 +1,11 @@
-import { ServiceMap, Data, Effect, Option } from 'effect'
+import { Context, Data, Effect, Option } from 'effect'
 
-export class VaultError extends Data.TaggedError('mxfx/VaultError')<{
+export class VaultError extends Data.TaggedError('mxfx/reduce-error')<{
   message: string
   cause?: unknown
 }> {}
 
-export class Vault extends ServiceMap.Service<
+export class Vault extends Context.Service<
   Vault,
   {
     setItem: (key: string, value: string) => Effect.Effect<void, VaultError>

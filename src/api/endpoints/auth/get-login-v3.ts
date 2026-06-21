@@ -1,8 +1,8 @@
 import { Schema } from 'effect'
 
-import { apiPath, makeEndpoint } from '../helpers'
+import { makeEndpoint } from '../endpoint'
 
-const responseSchema = Schema.Struct({
+const schema = Schema.Struct({
   flows: Schema.Array(Schema.Struct({ type: Schema.String })),
 })
 
@@ -14,10 +14,4 @@ const responseSchema = Schema.Struct({
  *
  * @see https://spec.matrix.org/v1.17/client-server-api/#get_matrixclientv3login
  */
-export const getLoginV3 = () =>
-  makeEndpoint({
-    path: apiPath()`/v3/login`,
-    method: 'GET',
-    auth: false,
-    schema: responseSchema,
-  })
+export const getLoginV3 = () => makeEndpoint('GET', { auth: false, schema })`/v3/login`

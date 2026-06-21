@@ -1,20 +1,20 @@
-import { Effect, Layer, ServiceMap } from 'effect'
+import { Effect, Layer, Context } from 'effect'
 import { HttpClientRequest } from 'effect/unstable/http'
 import { mapRequest } from 'effect/unstable/http/HttpClient'
 
 import { BaseHttpClient } from '.'
 import { MatrixConfig } from '../../config'
+import { withLogging } from './logging'
 
 const make = Effect.gen(function* () {
   const baseHttpClient = yield* BaseHttpClient.BaseHttpClient
-  const matrixConfig = yield* MatrixConfig.MatrixConfig
+  const matrixConfig = yield* MatrixConfig
 
-  yield* Effect.logDebug(`Using Matrix base URL: ${matrixConfig.baseUrl}`)
   return baseHttpClient.pipe(mapRequest(HttpClientRequest.prependUrl(`${matrixConfig.baseUrl ?? ''}/_matrix/client`)))
 })
 
-export class ApiHttpClient extends ServiceMap.Service<ApiHttpClient>()('mxfx/ApiHttpClient', {
-  make,
-}) {}
+const makeWithLogging = make.pipe(Effect.map(withLogging))
+export class ApiHttpClient extends Context.Service<ApiHttpClient>()('mxfx/ApiHttpClient', { make: makeWithLogging }) {}
 
-export const layer = Layer.effect(ApiHttpClient, make).pipe(Layer.provide(BaseHttpClient.layer))
+export const layer = Layer.effect(ApiHttpClient, makeWithLogging).pipe(Layer.provide(BaseHttpClient.layerWithoutLogging))
+export const layerWithoutLogging = Layer.effect(ApiHttpClient, make).pipe(Layer.provide(BaseHttpClient.layerWithoutLogging))

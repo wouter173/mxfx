@@ -3,7 +3,7 @@ import { HttpBody } from 'effect/unstable/http'
 
 import { MxcUri } from '../../../branded/mxc-uri'
 import { encodeSnakeCaseSchema } from '../../schema/encode-case'
-import { apiPath, makeEndpoint } from '../helpers'
+import { makeEndpoint } from '../endpoint'
 
 const optionsSchema = Schema.Struct({
   limit: Schema.optional(Schema.Int),
@@ -16,7 +16,7 @@ const userResponseSchema = Schema.Struct({
   userId: Schema.String,
 })
 
-const responseSchema = Schema.Struct({
+const schema = Schema.Struct({
   limited: Schema.Boolean,
   results: Schema.Array(userResponseSchema),
 })
@@ -34,11 +34,5 @@ export const postUserDirectorySearchV3 = (options: Schema.Schema.Type<typeof opt
   Effect.gen(function* () {
     const body = yield* Schema.encodeEffect(optionsSchema.pipe(encodeSnakeCaseSchema))(options).pipe(Effect.andThen(HttpBody.json))
 
-    return yield* makeEndpoint({
-      auth: true,
-      method: 'POST',
-      path: apiPath()`/v3/user_directory/search`,
-      body,
-      schema: responseSchema,
-    })
+    return yield* makeEndpoint('POST', { auth: true, body, schema })`/v3/user_directory/search`
   })

@@ -14,7 +14,7 @@ type AnyStruct = Schema.Struct<Schema.Struct.Fields>
 type AnyUnion = Schema.Union<ReadonlyArray<Schema.Top>>
 type AnyArray = {
   readonly ast: { readonly _tag: 'Arrays' }
-  readonly schema: Schema.Top
+  readonly value: Schema.Top
 }
 type AnyRecord = {
   readonly key: Schema.Record.Key
@@ -36,7 +36,7 @@ const isSchemaLike = (value: unknown): value is object | Function =>
 const isStructSchema = (value: unknown): value is AnyStruct => isSchemaLike(value) && 'fields' in value
 const isUnionSchema = (value: unknown): value is AnyUnion => isSchemaLike(value) && 'members' in value && 'mapMembers' in value
 const isArraySchema = (value: unknown): value is AnyArray =>
-  isSchemaLike(value) && 'ast' in value && 'schema' in value && (value as AnyArray).ast._tag === 'Arrays'
+  isSchemaLike(value) && 'ast' in value && 'value' in value && (value as AnyArray).ast._tag === 'Arrays'
 const isRecordSchema = (value: unknown): value is AnyRecord =>
   isSchemaLike(value) && 'key' in value && 'value' in value && !('fields' in value)
 const isOptionalWrapperSchema = (value: unknown): value is AnyOptionalWrapper =>
@@ -73,7 +73,7 @@ const encodeSnakeCaseSchemaInternal = (schema: Schema.Top): Schema.Top => {
   }
 
   if (isArraySchema(schema)) {
-    return Schema.Array(encodeSnakeCaseSchemaInternal(schema.schema))
+    return Schema.Array(encodeSnakeCaseSchemaInternal(schema.value))
   }
 
   if (isRecordSchema(schema)) {

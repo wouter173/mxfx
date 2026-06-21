@@ -1,9 +1,9 @@
 import { Schema } from 'effect'
 
 import { RoomId } from '../../../branded/room-id'
-import { apiPath, makeEndpoint } from '../helpers'
+import { makeEndpoint } from '../endpoint'
 
-const responseSchema = Schema.Struct({
+const schema = Schema.Struct({
   roomId: RoomId.schema,
 })
 
@@ -19,10 +19,4 @@ const responseSchema = Schema.Struct({
  *
  * @see https://spec.matrix.org/v1.17/client-server-api/#post_matrixclientv3roomsroomidjoin
  */
-export const postRoomsJoinV3 = ({ roomId }: { roomId: RoomId }) =>
-  makeEndpoint({
-    path: apiPath()`/v3/rooms/${roomId}/join`,
-    method: 'POST',
-    auth: true,
-    schema: responseSchema,
-  })
+export const postRoomsJoinV3 = ({ roomId }: { roomId: RoomId }) => makeEndpoint('POST', { auth: true, schema })`/v3/rooms/${roomId}/join`

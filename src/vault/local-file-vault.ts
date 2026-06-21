@@ -73,4 +73,4 @@ export const make = (config: MakeOpts) =>
     }
   })
 
-export const layer = (opts: MakeOpts) => Layer.effect(Vault, make(opts))
+export const layerLocalFileVault = (opts: MakeOpts) => Layer.effect(Vault, make(opts))

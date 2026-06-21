@@ -1,3 +1,3 @@
 export * from './vault'
-export * as InMemoryVault from './in-memory-vault'
-export * as LocalFileVault from './local-file-vault'
+export * from './in-memory-vault'
+export * from './local-file-vault'

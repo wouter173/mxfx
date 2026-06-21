@@ -1,23 +1,18 @@
-import { Effect, Layer, Result, Schema, ServiceMap } from 'effect'
-import { HttpClient, UrlParams } from 'effect/unstable/http'
+import { Effect, Layer, Schema, Context } from 'effect'
+import { HttpClient } from 'effect/unstable/http'
 
 import { ApiHttpError } from '../error'
 import { MatrixApiErrorContentSchema } from '../schema/error'
+import { withLogging } from './logging'
 
 const make = Effect.gen(function* () {
   const httpClient = yield* HttpClient.HttpClient
 
   return httpClient.pipe(
-    HttpClient.tapRequest(req =>
-      Effect.logDebug(
-        `Matrix API Request: ${req.method} ${Result.getOrElse(UrlParams.makeUrl(req.url, req.urlParams, req.hash), () => '')}`,
-        req.body,
-      ),
-    ),
     HttpClient.filterOrElse(
       res => res.status >= 200 && res.status < 400,
       res =>
-        res.text.pipe(
+        res.json.pipe(
           Effect.andThen(Schema.decodeUnknownEffect(MatrixApiErrorContentSchema)),
           Effect.catch(err =>
             Effect.logError(`Failed to decode MatrixApiErrorContent: ${err}`).pipe(
@@ -42,7 +37,8 @@ const make = Effect.gen(function* () {
   )
 })
 
-export class BaseHttpClient extends ServiceMap.Service<BaseHttpClient>()('mxfx/BaseHttpClient', {
-  make,
-}) {}
-export const layer = Layer.effect(BaseHttpClient, make)
+const makeWithLogging = make.pipe(Effect.map(withLogging))
+export class BaseHttpClient extends Context.Service<BaseHttpClient>()('mxfx/BaseHttpClient', { make: makeWithLogging }) {}
+
+export const layer = Layer.effect(BaseHttpClient, makeWithLogging)
+export const layerWithoutLogging = Layer.effect(BaseHttpClient, make)

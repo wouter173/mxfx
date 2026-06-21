@@ -2,13 +2,16 @@ import { Effect, Schema } from 'effect'
 
 import { EventId } from '../../../branded/event-id'
 import { RoomId } from '../../../branded/room-id'
-import { AccountData, BaseEvent, StateSchema, StrippedStateEvent, Timeline } from '../../schema/common'
-import { apiPath, makeEndpoint } from '../helpers'
+import { filterSchema } from '../../../schema'
+import { BaseEvent, StrippedStateEvent } from '../../../schema/event'
+import { encodeSnakeCaseSchema } from '../../schema/encode-case'
+import { AccountData, StateSchema, Timeline } from '../../schema/sync'
+import { makeEndpoint } from '../endpoint'
 
 const presenceSchema = Schema.Union([Schema.Literal('online'), Schema.Literal('offline'), Schema.Literal('unavailable')])
 
 const optionsSchema = Schema.Struct({
-  filter: Schema.optional(Schema.String),
+  filter: Schema.optional(Schema.fromJsonString(encodeSnakeCaseSchema(filterSchema))), //TODO: remove snakecase handling here
   fullState: Schema.optional(Schema.Boolean),
   setPresence: Schema.optional(presenceSchema),
   since: Schema.optional(Schema.String),
@@ -16,6 +19,7 @@ const optionsSchema = Schema.Struct({
   useStateAfter: Schema.optional(Schema.Boolean),
 })
 
+//TODO: don't export this from here, it's noy only used in this endpoint
 export const getSyncV3ResponseSchema = Schema.Struct({
   accountData: Schema.optional(AccountData),
   deviceLists: Schema.optional(Schema.Any), //TODO
@@ -39,6 +43,7 @@ export const getSyncV3ResponseSchema = Schema.Struct({
             accountData: Schema.optional(AccountData),
             ephemeral: Schema.optional(Schema.Struct({ events: Schema.Array(BaseEvent) })), //TODO
             state: Schema.optional(StateSchema),
+            stateAfter: Schema.optional(StateSchema),
             summary: Schema.optional(
               Schema.Struct({
                 'm.heroes': Schema.optional(Schema.Array(Schema.String)),
@@ -79,6 +84,7 @@ export const getSyncV3ResponseSchema = Schema.Struct({
           Schema.Struct({
             accountData: Schema.optional(AccountData),
             state: Schema.optional(StateSchema),
+            stateAfter: Schema.optional(StateSchema),
             timeline: Schema.optional(Timeline),
           }),
         ),
@@ -87,6 +93,8 @@ export const getSyncV3ResponseSchema = Schema.Struct({
   ),
   toDevice: Schema.optional(Schema.Struct({ events: Schema.Array(BaseEvent) })),
 })
+
+const schema = getSyncV3ResponseSchema
 
 /**
  * `GET /_matrix/client/v3/sync`
@@ -100,13 +108,7 @@ export const getSyncV3ResponseSchema = Schema.Struct({
  */
 export const getSyncV3 = (options: typeof optionsSchema.Type) =>
   Effect.gen(function* () {
-    const params = yield* Schema.encodeEffect(optionsSchema)(options)
+    const params = yield* Schema.encodeEffect(encodeSnakeCaseSchema(optionsSchema))(options) //TODO: remove snakecase handling here
 
-    return yield* makeEndpoint({
-      path: apiPath()`/v3/sync`,
-      method: 'GET',
-      auth: true,
-      params,
-      schema: getSyncV3ResponseSchema,
-    })
+    return yield* makeEndpoint('GET', { auth: true, params, schema })`/v3/sync`
   })

@@ -90,11 +90,11 @@ describe('getSyncV3ResponseSchema', () => {
                           format: 'org.matrix.custom.html',
                           formatted_body: '<b>redaction-root</b>',
                         },
-                        eventId: '$red1',
-                        originServerTs: 201,
+                        event_id: '$red1',
+                        origin_server_ts: 201,
                         sender: '@alice:example.org',
                         unsigned: {
-                          redactedBecause: {
+                          redacted_because: {
                             type: 'm.room.message',
                             content: {
                               msgtype: 'm.text',
@@ -102,8 +102,8 @@ describe('getSyncV3ResponseSchema', () => {
                               format: 'org.matrix.custom.html',
                               formatted_body: '<b>redaction-child</b>',
                             },
-                            eventId: '$red2',
-                            originServerTs: 202,
+                            event_id: '$red2',
+                            origin_server_ts: 202,
                             sender: '@alice:example.org',
                           },
                         },
@@ -151,6 +151,7 @@ describe('getSyncV3ResponseSchema', () => {
                     event_id: '$leave1',
                     origin_server_ts: 300,
                     sender: '@alice:example.org',
+                    state_key: '@alice:example.org',
                   },
                 ],
               },
