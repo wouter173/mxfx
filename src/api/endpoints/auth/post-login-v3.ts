@@ -2,8 +2,7 @@ import { Effect, Schema } from 'effect'
 import { HttpBody } from 'effect/unstable/http'
 
 import { encodeSnakeCaseSchema } from '../../schema/encode-case'
-import { DiscoveryInformationResponseSchema } from '../../schema/rest'
-import { makeEndpoint } from '../helpers'
+import { makeEndpoint } from '../endpoint'
 
 const commonOptionsSchema = Schema.Struct({
   initialDeviceDisplayName: Schema.optional(Schema.String),
@@ -26,6 +25,10 @@ const optionsSchema = Schema.Union([
     ]),
   }),
 ])
+
+const DiscoveryInformationResponseSchema = Schema.Struct({
+  'm.homeserver': Schema.Struct({ base_url: Schema.String }),
+})
 
 const schema = Schema.Struct({
   accessToken: Schema.String,

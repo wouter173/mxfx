@@ -3,7 +3,7 @@ import { HttpBody } from 'effect/unstable/http'
 
 import { MxcUri } from '../../../branded/mxc-uri'
 import { encodeSnakeCaseSchema } from '../../schema/encode-case'
-import { makeEndpoint } from '../helpers'
+import { makeEndpoint } from '../endpoint'
 
 const optionsSchema = Schema.Struct({
   limit: Schema.optional(Schema.Int),

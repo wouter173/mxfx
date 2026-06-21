@@ -15,6 +15,21 @@
   // 	],
   // 	"description": "Log output to console"
   // }
+  "effect-gen": {
+    "scope": "typescript",
+    "prefix": "egen",
+    "body": "Effect.gen(function* () {${0}})"
+  },
+  "effect-gen-fn": {
+    "scope": "typescript",
+    "prefix": "egenfn",
+    "body": "(${1}) => Effect.gen(function* () {${0}})"
+  },
+  "effect-fn": {
+    "scope": "typescript",
+    "prefix": "efn",
+    "body": "Effect.fn(function* () {${0}})"
+  },
 
   "mxfx-get-endpoint": {
     "scope": "typescript",
@@ -40,7 +55,7 @@
       "    auth: ${5:true},",
       "    schema: responseSchema,",
       "  })",
-      "",
-    ],
-  },
+      ""
+    ]
+  }
 }

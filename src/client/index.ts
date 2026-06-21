@@ -1,1 +1,1 @@
-export * as MatrixClient from './client'
+export * from './client'

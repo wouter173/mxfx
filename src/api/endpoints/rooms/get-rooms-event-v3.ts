@@ -1,6 +1,6 @@
 import type { EventId, RoomId } from '../../../branded'
-import { RoomEvent } from '../../schema/common'
-import { makeEndpoint } from '../helpers'
+import { RoomEvent } from '../../schema/sync'
+import { makeEndpoint } from '../endpoint'
 
 const schema = RoomEvent
 

@@ -1,0 +1,6 @@
+export * as MatrixAuth from './auth/index'
+export * as MatrixApi from './api/index'
+export * as MatrixClient from './client/index'
+export * as MatrixConfig from './config/index'
+export * as Vault from './vault/index'
+export * from './branded/index'

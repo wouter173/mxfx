@@ -2,9 +2,9 @@ import { describe, expect, expectTypeOf, it } from '@effect/vitest'
 import { Effect, Schema } from 'effect'
 import type { Effect as FxEffect } from 'effect/Effect'
 
-import { EventId, UserId } from '../../branded'
-import { ClientEvent, ClientEventWithoutRoomId, RoomMessageEventPartial } from './common'
-import { encodeSnakeCaseKeys } from './encode-case'
+import { encodeSnakeCaseKeys } from '../api/schema/encode-case'
+import { EventId, UserId } from '../branded'
+import { ClientEvent, ClientEventWithoutRoomId, RoomMessageEventPartial } from './event'
 
 describe('event schema', () => {
   it('decodeEffect keeps typed recursive redactedBecause', () => {

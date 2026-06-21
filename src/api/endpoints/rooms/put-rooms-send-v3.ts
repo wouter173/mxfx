@@ -3,7 +3,7 @@ import { HttpBody } from 'effect/unstable/http'
 
 import { EventId, RoomId } from '../../../branded'
 import { encodeSnakeCaseSchema } from '../../schema/encode-case'
-import { makeEndpoint } from '../helpers'
+import { makeEndpoint } from '../endpoint'
 
 const schema = Schema.Struct({
   eventId: EventId.schema,
@@ -58,7 +58,7 @@ export const putRoomsSendV3 = (options: typeof optionsSchema.Type) =>
       Effect.andThen(({ content }) => HttpBody.json(content)),
     )
 
-    const transactionId = options.transactionId ? options.transactionId : yield* Random.nextUUIDv4
+    const transactionId = options.transactionId ? options.transactionId : yield* Random.nextIntBetween(1, 10000000) // TODO: used be uuidv4 but was removed from random module into crypto, but haven't bothered to check how possible it is to DI anything here bc crypto gotta be injected
 
     return yield* makeEndpoint('PUT', { auth: true, schema, body })`/v3/rooms/${options.roomId}/send/${options.eventType}/${transactionId}`
   })

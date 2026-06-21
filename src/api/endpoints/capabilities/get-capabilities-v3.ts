@@ -1,6 +1,6 @@
 import { Schema } from 'effect'
 
-import { makeEndpoint } from '../helpers'
+import { makeEndpoint } from '../endpoint'
 
 const booleanCapabilitySchema = Schema.Struct({
   enabled: Schema.Boolean,

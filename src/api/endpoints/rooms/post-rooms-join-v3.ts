@@ -1,7 +1,7 @@
 import { Schema } from 'effect'
 
 import { RoomId } from '../../../branded/room-id'
-import { makeEndpoint } from '../helpers'
+import { makeEndpoint } from '../endpoint'
 
 const schema = Schema.Struct({
   roomId: RoomId.schema,

@@ -2,7 +2,7 @@ import { Schema } from 'effect'
 
 import { MxcUri } from '../../../branded/mxc-uri'
 import { UserId } from '../../../branded/user-id'
-import { makeEndpoint } from '../helpers'
+import { makeEndpoint } from '../endpoint'
 
 const schema = Schema.Struct({
   avatarUrl: Schema.optional(Schema.NullOr(MxcUri.schema)),

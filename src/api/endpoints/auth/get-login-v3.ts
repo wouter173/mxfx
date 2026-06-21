@@ -1,6 +1,6 @@
 import { Schema } from 'effect'
 
-import { makeEndpoint } from '../helpers'
+import { makeEndpoint } from '../endpoint'
 
 const schema = Schema.Struct({
   flows: Schema.Array(Schema.Struct({ type: Schema.String })),

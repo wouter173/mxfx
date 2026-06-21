@@ -1,1 +1,1 @@
-export * as MatrixConfig from './matrix-config'
+export * from './matrix-config'

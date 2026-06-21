@@ -1,26 +1,24 @@
-import { Effect, Layer, ServiceMap } from 'effect'
+import { Effect, Layer, Context } from 'effect'
 import { HttpClientRequest } from 'effect/unstable/http'
 import { mapRequestEffect } from 'effect/unstable/http/HttpClient'
 
 import { ApiHttpClient } from '.'
-import { Vault } from '../../vault'
+import { MatrixAuth } from '../../auth'
+import { withLogging } from './logging'
 
 const make = Effect.gen(function* () {
   const apiHttpClient = yield* ApiHttpClient.ApiHttpClient
-  const vault = yield* Vault
+  const matrixAuth = yield* MatrixAuth
 
   return apiHttpClient.pipe(
     mapRequestEffect(req =>
-      vault.getItem('accessToken').pipe(
-        Effect.andThen(Effect.fromOption),
-        Effect.catchTag('NoSuchElementError', () => Effect.fail(new Error('No access token found in vault'))), //TODO: create proper error type
-        Effect.andThen(token => Effect.succeed(HttpClientRequest.bearerToken(req, token))),
-      ),
+      matrixAuth.getAccessToken().pipe(Effect.andThen(({ token }) => Effect.succeed(HttpClientRequest.bearerToken(req, token)))),
     ),
   )
 })
 
-export class AuthHttpClient extends ServiceMap.Service<AuthHttpClient>()('mxfx/AuthHttpClient', {
-  make,
-}) {}
-export const layer = Layer.effect(AuthHttpClient, make).pipe(Layer.provide(ApiHttpClient.layer))
+const makeWithLogging = make.pipe(Effect.map(withLogging))
+export class AuthHttpClient extends Context.Service<AuthHttpClient>()('mxfx/AuthHttpClient', { make: makeWithLogging }) {}
+
+export const layer = Layer.effect(AuthHttpClient, makeWithLogging).pipe(Layer.provide(ApiHttpClient.layerWithoutLogging))
+export const layerWithoutLogging = Layer.effect(AuthHttpClient, make).pipe(Layer.provide(ApiHttpClient.layerWithoutLogging))

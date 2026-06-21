@@ -1,7 +1,7 @@
 import { Schema } from 'effect'
 
 import type { ServerName } from '../../../branded/server-name'
-import { makeEndpoint } from '../helpers'
+import { makeEndpoint } from '../endpoint'
 
 const schema = Schema.Struct({
   'm.homeserver': Schema.Struct({

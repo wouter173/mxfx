@@ -28,7 +28,7 @@ const make = ({ values = {} }: MakeOpts = {}) =>
     }
   })
 
-export const layer = Layer.effect(Vault, make())
-export const layerDefault = (opts: MakeOpts) => Layer.effect(Vault, make(opts))
-export const layerConfig = (optsConfig: Config.Wrap<MakeOpts>) =>
-  Layer.effect(Vault, Effect.andThen(Config.unwrap(optsConfig).asEffect(), make))
+export const layerInMemoryVault = Layer.effect(Vault, make())
+export const layerInMemoryVaultDefault = (opts: MakeOpts) => Layer.effect(Vault, make(opts))
+export const layerInMemoryVaultConfig = (optsConfig: Config.Wrap<MakeOpts>) =>
+  Layer.effect(Vault, Effect.andThen(Config.unwrap(optsConfig), make))

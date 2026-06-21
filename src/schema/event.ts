@@ -1,11 +1,29 @@
-import { Schema, Struct } from 'effect'
+import { Schema, SchemaGetter, String, Struct } from 'effect'
+import type { Codec } from 'effect/Schema'
 
-import { EventId } from '../../branded/event-id'
-import { MxcUri } from '../../branded/mxc-uri'
-import { RoomId } from '../../branded/room-id'
-import { UserId } from '../../branded/user-id'
+import { EventId, MxcUri, RoomId, UserId } from '../branded'
 
 export const BaseEvent = Schema.Unknown
+
+const transformKeys = (value: unknown, transform: (key: string) => string): unknown => {
+  if (Array.isArray(value)) {
+    return value.map(item => transformKeys(item, transform))
+  }
+
+  if (typeof value !== 'object' || value === null) {
+    return value
+  }
+
+  return Object.fromEntries(Object.entries(value).map(([key, nested]) => [transform(key), transformKeys(nested, transform)]))
+}
+
+const redactedEvent = <T, E>(schema: () => Schema.Codec<T, E>): Schema.Codec<T, unknown> =>
+  Schema.Any.pipe(
+    Schema.decodeTo(Schema.suspend(schema), {
+      decode: SchemaGetter.transform(value => transformKeys(value, String.snakeToCamel) as E),
+      encode: SchemaGetter.transform(value => transformKeys(value, String.camelToSnake)),
+    }),
+  )
 
 //StrippedStateEvent
 
@@ -23,7 +41,7 @@ export class ClientEventUnsigned extends Schema.Opaque<ClientEventUnsigned>()(
     age: Schema.optional(Schema.Int),
     membership: Schema.optional(Schema.String),
     prevContent: Schema.optional(Schema.Any),
-    redactedBecause: Schema.optional(Schema.suspend((): Schema.Codec<ClientEvent, ClientEventEncoded> => ClientEvent)),
+    redactedBecause: Schema.optional(redactedEvent((): Schema.Codec<ClientEvent, ClientEventEncoded> => ClientEvent)),
     transactionId: Schema.optional(Schema.String),
   }),
 ) {}
@@ -41,13 +59,13 @@ export class ClientEvent extends Schema.Opaque<ClientEvent>()(
   }),
 ) {}
 
-interface ClientEventEncoded extends Schema.Codec.Encoded<typeof ClientEvent> {}
+interface ClientEventEncoded extends Codec.Encoded<typeof ClientEvent> {}
 
 export class ClientEventWithoutRoomIdUnsigned extends Schema.Opaque<ClientEventWithoutRoomIdUnsigned>()(
   Schema.Struct({
     ...ClientEventUnsigned.fields,
     redactedBecause: Schema.optional(
-      Schema.suspend((): Schema.Codec<ClientEventWithoutRoomId, ClientEventWithoutRoomIdEncoded> => ClientEventWithoutRoomId),
+      redactedEvent((): Schema.Codec<ClientEventWithoutRoomId, ClientEventWithoutRoomIdEncoded> => ClientEventWithoutRoomId),
     ),
   }),
 ) {}
@@ -59,7 +77,7 @@ export class ClientEventWithoutRoomId extends Schema.Opaque<ClientEventWithoutRo
   }),
 ) {}
 
-interface ClientEventWithoutRoomIdEncoded extends Schema.Codec.Encoded<typeof ClientEventWithoutRoomId> {}
+interface ClientEventWithoutRoomIdEncoded extends Codec.Encoded<typeof ClientEventWithoutRoomId> {}
 
 // room message events
 const RoomMessageEventTextCommonContentFormatted = Schema.Struct({
@@ -130,7 +148,7 @@ export const RoomMessageEventPartial = Schema.Struct({
 })
 
 // room state events
-export const RoomNameEventPartial = Schema.Struct({
+export const RoomNameStateEventPartial = Schema.Struct({
   type: Schema.Literal('m.room.name'),
   content: Schema.StructWithRest(
     Schema.Struct({ name: Schema.String }), //
@@ -138,14 +156,14 @@ export const RoomNameEventPartial = Schema.Struct({
   ),
 })
 
-export const RoomTopicEventPartial = Schema.Struct({
+export const RoomTopicStateEventPartial = Schema.Struct({
   type: Schema.Literal('m.room.topic'),
   content: Schema.Struct({
     topic: Schema.String,
   }),
 })
 
-export const RoomAvatarEventPartial = Schema.Struct({
+export const RoomAvatarStateEventPartial = Schema.Struct({
   type: Schema.Literal('m.room.avatar'),
   content: Schema.Struct({
     url: MxcUri.schema,
@@ -161,30 +179,43 @@ export const RoomAvatarEventPartial = Schema.Struct({
   }),
 })
 
-export const RoomPinnedEventsEventPartial = Schema.Struct({
+export const RoomPinnedEventsStateEventPartial = Schema.Struct({
   type: Schema.Literal('m.room.pinned_events'),
   content: Schema.Struct({
     pinned: Schema.Array(EventId.schema),
   }),
 })
 
-export const AccountData = Schema.Struct({
-  events: Schema.Array(BaseEvent),
+const StateEventWithoutRoomIdBase = Schema.Struct({
+  ...ClientEventWithoutRoomId.fields,
+  stateKey: Schema.String,
 })
 
-export const StateSchema = Schema.Struct({ events: Schema.Array(ClientEventWithoutRoomId) })
+const StateEventBase = Schema.Struct({
+  ...ClientEvent.fields,
+  stateKey: Schema.String,
+})
 
-export const RoomEvent = Schema.Union([
+export const StateEventWithoutRoomId = Schema.Union([
+  StateEventWithoutRoomIdBase,
+  Schema.Struct({ ...StateEventWithoutRoomIdBase.fields, ...RoomNameStateEventPartial.fields }),
+  Schema.Struct({ ...StateEventWithoutRoomIdBase.fields, ...RoomTopicStateEventPartial.fields }),
+  Schema.Struct({ ...StateEventWithoutRoomIdBase.fields, ...RoomAvatarStateEventPartial.fields }),
+  Schema.Struct({ ...StateEventWithoutRoomIdBase.fields, ...RoomPinnedEventsStateEventPartial.fields }),
+])
+
+export const StateEvent = Schema.Union([
+  StateEventBase,
+  Schema.Struct({ ...StateEventBase.fields, ...RoomNameStateEventPartial.fields }),
+  Schema.Struct({ ...StateEventBase.fields, ...RoomTopicStateEventPartial.fields }),
+  Schema.Struct({ ...StateEventBase.fields, ...RoomAvatarStateEventPartial.fields }),
+  Schema.Struct({ ...StateEventBase.fields, ...RoomPinnedEventsStateEventPartial.fields }),
+])
+
+export const RoomEventWithoutRoomId = Schema.Union([
+  StateEventWithoutRoomId,
   ClientEventWithoutRoomId,
-  Schema.Struct({ ...ClientEventWithoutRoomId.fields, ...RoomNameEventPartial.fields }),
-  Schema.Struct({ ...ClientEventWithoutRoomId.fields, ...RoomTopicEventPartial.fields }),
-  Schema.Struct({ ...ClientEventWithoutRoomId.fields, ...RoomAvatarEventPartial.fields }),
-  Schema.Struct({ ...ClientEventWithoutRoomId.fields, ...RoomPinnedEventsEventPartial.fields }),
   Schema.Struct({ ...ClientEventWithoutRoomId.fields, ...RoomMessageEventPartial.fields }),
 ])
 
-export const Timeline = Schema.Struct({
-  events: Schema.optional(Schema.Array(RoomEvent)),
-  limited: Schema.optional(Schema.Boolean),
-  prevBatch: Schema.optional(Schema.String),
-})
+export const RoomEvent = Schema.Union([StateEvent, Schema.Struct({ ...ClientEvent.fields, ...RoomMessageEventPartial.fields })])
