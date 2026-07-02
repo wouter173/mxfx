@@ -1,7 +1,8 @@
 # PROBLEMS
 
-## 1) Event middleware
+## 1) Encryption
 
+- figure out olm/megolm
 - Encrypted events need to be decrypted before they are resolved
 
 ## 2) DB implementations
@@ -13,7 +14,3 @@
 ## 3) Data model
 
 - how to model the data in a way that is efficient and easy to query
-
-## 4) encryption
-
-- figure out olm/megolm

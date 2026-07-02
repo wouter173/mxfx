@@ -21,4 +21,5 @@ Modules:
 
 - `store`: Local storage management, including caching and persistence.
 
-- `client`: High-level client API, built on top of the `api` module and using the `config`, `store`, and `vault` modules for persistence, configuration, and secrets management.
+- `client`: High-level client API, built on top of the `api` module and using the `config`, `store`, and `vault` modules for persistence,
+  configuration, and secrets management.

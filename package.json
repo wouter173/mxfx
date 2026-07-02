@@ -1,44 +1,19 @@
 {
-  "name": "mxfx",
-  "version": "0.0.1",
-  "author": "Wouter de Bruijn <wouter@debruijn.dev>",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/wouter173/mxfx.git"
-  },
+  "private": "true",
   "type": "module",
-  "sideEffects": [],
-  "exports": {
-    "./client": "./src/client/index.ts",
-    "./api": "./src/api/index.ts",
-    "./api/endpoints": "./src/api/endpoints/index.ts",
-    "./api/http-client": "./src/api/http-client/index.ts",
-    "./api/schema": "./src/api/schema/index.ts",
-    "./auth": "./src/auth/index.ts",
-    "./config": "./src/config/index.ts",
-    "./vault": "./src/vault/index.ts",
-    "./branded": "./src/branded/index.ts",
-    ".": "./src/index.ts"
-  },
   "scripts": {
+    "typecheck": "tsc",
     "fmt": "oxfmt",
     "fmt:check": "oxfmt --check",
     "lint": "oxlint",
     "lint:fix": "oxlint --fix",
-    "typecheck": "tsc --noEmit",
-    "test": "vitest",
-    "test:ui": "vitest --ui"
+    "test": "vitest"
   },
   "devDependencies": {
-    "@effect/platform-node": "4.0.0-beta.84",
-    "@effect/vitest": "4.0.0-beta.84",
     "oxfmt": "^0.55.0",
     "oxlint": "^1.70.0",
-    "oxlint-tsgolint": "^0.23.0",
-    "typescript": "^5.9.3",
-    "vitest": "^3.1.9"
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.9"
   },
-  "peerDependencies": {
-    "effect": "4.0.0-beta.84"
-  }
+  "packageManager": "pnpm@11.8.0"
 }

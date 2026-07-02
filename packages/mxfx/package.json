@@ -1,0 +1,37 @@
+{
+  "name": "mxfx",
+  "version": "0.0.1",
+  "author": "Wouter de Bruijn <wouter@debruijn.dev>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/wouter173/mxfx.git"
+  },
+  "type": "module",
+  "sideEffects": [],
+  "exports": {
+    "./client": "./src/client/index.ts",
+    "./api": "./src/api/index.ts",
+    "./api/endpoints": "./src/api/endpoints/index.ts",
+    "./api/http-client": "./src/api/http-client/index.ts",
+    "./api/schema": "./src/api/schema/index.ts",
+    "./auth": "./src/auth/index.ts",
+    "./config": "./src/config/index.ts",
+    "./vault": "./src/vault/index.ts",
+    "./branded": "./src/branded/index.ts",
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest",
+    "test:ui": "vitest --ui"
+  },
+  "devDependencies": {
+    "@effect/platform-node": "4.0.0-beta.84",
+    "@effect/vitest": "4.0.0-beta.84",
+    "typescript": "^6.0.3",
+    "vitest": "^3.1.9"
+  },
+  "peerDependencies": {
+    "effect": "4.0.0-beta.84"
+  }
+}
