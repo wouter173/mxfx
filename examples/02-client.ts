@@ -1,12 +1,12 @@
 import { NodeHttpClient, NodeRuntime } from '@effect/platform-node'
 import { Cause, Config, Effect, Layer, References, Stream } from 'effect'
 import { DevTools } from 'effect/unstable/devtools'
-import { MatrixApi, MatrixAuth, MatrixClient, MatrixConfig, Store } from 'mxfx'
+import { MatrixApi, MatrixAuth, MatrixClient, MatrixConfig } from 'mxfx'
 import { endpoints } from 'mxfx/api'
 import type { RoomId } from 'mxfx/branded'
 
 type SyncFrame = typeof endpoints.getSyncV3ResponseSchema.Type
-const lastPredicate = (frame: Stream.Stream<SyncFrame>) =>
+const pingPredicate = (frame: Stream.Stream<SyncFrame>) =>
   frame.pipe(
     Stream.flatMap(sync => Stream.fromIterable(Object.entries(sync.rooms?.join ?? {}))),
     Stream.flatMap(([roomId, room]) =>
@@ -22,7 +22,7 @@ const lastPredicate = (frame: Stream.Stream<SyncFrame>) =>
 
         return (
           typeof content.body === 'string' &&
-          content.body.trim().startsWith('!last') &&
+          content.body.trim().startsWith('!ping') &&
           (content.msgtype === 'm.text' || content.msgtype === 'm.notice' || content.msgtype === 'm.emote')
         )
       }),
@@ -32,20 +32,15 @@ const lastPredicate = (frame: Stream.Stream<SyncFrame>) =>
 const program = Effect.gen(function* () {
   const api = yield* MatrixApi.MatrixApi
   const client = yield* MatrixClient.MatrixClient
-  const store = yield* Store.Store
 
   const { userId, deviceId, isGuest } = yield* endpoints.getAccountWhoami().pipe(Effect.andThen(api.execute))
   yield* Effect.logDebug({ userId, deviceId, isGuest })
 
-  yield* client.onEvent({ predicate: lastPredicate }, event =>
+  yield* client.onEvent({ predicate: pingPredicate }, event =>
     Effect.gen(function* () {
-      const timeline = yield* store.getRoomTimeline(event.roomId)
-      const lastMessages = timeline.filter(e => e.type === 'm.room.message' && e.sender !== userId).slice(-5)
-      yield* Effect.log(lastMessages)
-
       yield* endpoints
         .putRoomsSendV3({
-          content: { msgtype: 'm.text', body: lastMessages.map(x => `${x.content['body']}`).join('\n\n') },
+          content: { msgtype: 'm.text', body: 'pong' },
           eventType: 'm.room.message',
           roomId: event.roomId,
         })
