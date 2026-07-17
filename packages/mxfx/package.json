@@ -18,6 +18,7 @@
     "./config": "./src/config/index.ts",
     "./vault": "./src/vault/index.ts",
     "./branded": "./src/branded/index.ts",
+    "./kv": "./src/kv/index.ts",
     ".": "./src/index.ts"
   },
   "scripts": {

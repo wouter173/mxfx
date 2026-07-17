@@ -1,6 +1,9 @@
-SCHEMA.md
-
 dist
+**/*.tsbuildinfo
+
 node_modules
+
 .env
 db.sqlite
+
+.DS_Store

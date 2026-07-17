@@ -2,19 +2,17 @@ import { Effect, Layer, Context, Option, PubSub, Duration, Stream } from 'effect
 
 import { endpoints, MatrixApi } from '../api/index.ts'
 import type { RoomId } from '../branded/index.ts'
-import { Store } from '../store/index.ts'
-import { Reducers } from './sync/reducer.ts'
+import { Kv } from '../kv/index.ts'
 
 const make = Effect.gen(function* () {
   const matrixApi = yield* MatrixApi
 
-  const reducers = yield* Reducers
-  const store = yield* Store
+  const kv = yield* Kv
 
   const syncHub = yield* PubSub.unbounded<SyncFrame>()
   const syncStream = Stream.fromPubSub(syncHub)
 
-  const syncOnce = store.getNextBatch().pipe(
+  const syncOnce = kv.getString('syncToken').pipe(
     Effect.flatMap(nextBatch =>
       endpoints
         .getSyncV3({
@@ -41,7 +39,7 @@ const make = Effect.gen(function* () {
         .pipe(
           Effect.andThen(matrixApi.execute),
           Effect.tap(syncResponse => PubSub.publish(syncHub, syncResponse)),
-          Effect.tap(syncResponse => Effect.forEach(reducers, reducer => reducer.reduce(syncResponse))),
+          Effect.andThen(syncResponse => kv.set('syncToken', syncResponse.nextBatch)),
         ),
     ),
   )
@@ -72,4 +70,4 @@ export class MatrixClient extends Context.Service<
   }
 >()('mxfx/client') {}
 
-export const layerMatrixClient = Layer.effect(MatrixClient, make).pipe(Layer.provideMerge(Reducers.layer))
+export const layerMatrixClient = Layer.effect(MatrixClient, make)
