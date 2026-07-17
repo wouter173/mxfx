@@ -1,5 +1,5 @@
 import { describe, expect, it } from '@effect/vitest'
-import { Effect, Exit } from 'effect'
+import { Effect, Exit, Schema } from 'effect'
 
 import { UserId } from './user-id.ts'
 
@@ -22,6 +22,22 @@ describe('branded', () => {
 
       const veryLongUserId = '@' + 'a'.repeat(244) + ':matrix.org'
       expect(Exit.isFailure(yield* Effect.exit(UserId.make(veryLongUserId)))).toBeTruthy()
+    }),
+  )
+
+  it.effect('should decode historical UserIds received from a server', () =>
+    Effect.gen(function* () {
+      const decode = Schema.decodeUnknownEffect(UserId.schema)
+
+      expect(yield* decode('@CapitalizedUserId:matrix.org')).toBe('@CapitalizedUserId:matrix.org')
+      expect(yield* decode('@legacy~user:matrix.org')).toBe('@legacy~user:matrix.org')
+    }),
+  )
+
+  it.effect('should not create new UserIds using the historical grammar', () =>
+    Effect.gen(function* () {
+      expect(Exit.isFailure(yield* Effect.exit(UserId.make('@CapitalizedUserId:matrix.org')))).toBeTruthy()
+      expect(Exit.isFailure(yield* Effect.exit(UserId.make('@legacy~user:matrix.org')))).toBeTruthy()
     }),
   )
 })
