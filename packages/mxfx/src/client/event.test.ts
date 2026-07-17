@@ -44,6 +44,14 @@ const frame = Schema.decodeUnknownSync(endpoints.getSyncV3ResponseSchema)({
             },
             {
               type: 'com.example.command',
+              content: { command: 'run', count: '99' },
+              eventId: '$state:example.org',
+              originServerTs: 1,
+              sender: '@alice:example.org',
+              stateKey: '',
+            },
+            {
+              type: 'com.example.command',
               content: { command: 'skip', count: '3' },
               eventId: '$skip:example.org',
               originServerTs: 3,
@@ -87,6 +95,17 @@ describe('makeEvent', () => {
           type: 'com.example.command',
           content: { command: 'run', count: 2 },
         }),
+      ])
+    }),
+  )
+
+  it.effect('deduplicates state-after events also present in the timeline', () =>
+    Effect.gen(function* () {
+      const events = yield* Stream.make(frame).pipe(commandEvent.stream, Stream.runCollect)
+
+      expect(Array.from(events).map(event => [event.eventId, event.content.count])).toEqual([
+        ['$state:example.org', 1],
+        ['$run:example.org', 2],
       ])
     }),
   )

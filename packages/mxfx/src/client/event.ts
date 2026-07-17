@@ -43,12 +43,21 @@ export type EventDefinition<Type extends string, ContentSchema extends Schema.De
 
 const joinedRoomEvents = (frame: SyncFrame) =>
   Object.entries(frame.rooms?.join ?? {}).flatMap(([roomId, room]) => {
-    // `state_after` supersedes `state` when requested. Reading one or the
-    // other prevents the same state event from being delivered twice.
+    // `state_after` supersedes `state` when requested. State events precede
+    // timeline events, so the state copy wins when the same event is present
+    // in both while timeline-only (including intermediate) events are kept.
     const state = room.stateAfter?.events ?? room.state?.events ?? []
     const timeline = room.timeline?.events ?? []
+    const seenEventIds = new Set<string>()
 
-    return [...state, ...timeline].map(event => ({ ...event, roomId: roomId as RoomId }))
+    return [...state, ...timeline]
+      .filter(event => {
+        if (seenEventIds.has(event.eventId)) return false
+
+        seenEventIds.add(event.eventId)
+        return true
+      })
+      .map(event => ({ ...event, roomId: roomId as RoomId }))
   })
 
 /**
