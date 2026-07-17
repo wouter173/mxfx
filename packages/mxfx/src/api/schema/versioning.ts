@@ -98,19 +98,37 @@ type IsAtLeast<Current extends MatrixVersion, Required extends MatrixVersion> =
       : LessThanOrEqual<Required[1], Current[1]>
     : LessThanOrEqual<Required[0], Current[0]>
 
-type SupportsAny<Mscs extends ReadonlyArray<Msc>, Required extends ReadonlyArray<Msc>> =
-  Extract<Mscs[number], Required[number]> extends never ? false : true
+type SupportsAny<Mscs extends ReadonlyArray<Msc>, Required extends ReadonlyArray<Msc>> = Msc extends Mscs[number]
+  ? boolean
+  : Extract<Mscs[number], Required[number]> extends never
+    ? false
+    : true
+
+type SupportsAnyCapability<Capabilities extends MatrixCapabilities, Required extends ReadonlyArray<Msc>> = 'mscs' extends keyof Capabilities
+  ? SupportsAny<NonNullable<Capabilities['mscs']>, Required>
+  : false
+
+type Or<Left extends boolean, Right extends boolean> = [Left] extends [true]
+  ? true
+  : [Right] extends [true]
+    ? true
+    : [Left] extends [false]
+      ? Right
+      : [Right] extends [false]
+        ? Left
+        : boolean
 
 type IsAvailable<Capabilities extends MatrixCapabilities, Availability extends FieldAvailability> = Availability extends {
   readonly since: infer Version extends MatrixVersion
 }
-  ? IsAtLeast<Capabilities['version'], Version> extends true
-    ? true
-    : Availability extends { readonly unstable: infer Required extends ReadonlyArray<Msc> }
-      ? SupportsAny<NonNullable<Capabilities['mscs']>, Required>
-      : false
+  ? Or<
+      IsAtLeast<Capabilities['version'], Version>,
+      Availability extends { readonly unstable: infer Required extends ReadonlyArray<Msc> }
+        ? SupportsAnyCapability<Capabilities, Required>
+        : false
+    >
   : Availability extends { readonly unstable: infer Required extends ReadonlyArray<Msc> }
-    ? SupportsAny<NonNullable<Capabilities['mscs']>, Required>
+    ? SupportsAnyCapability<Capabilities, Required>
     : false
 
 type SelectFields<Fields extends Schema.Struct.Fields, Capabilities extends MatrixCapabilities> = {
@@ -120,6 +138,70 @@ type SelectFields<Fields extends Schema.Struct.Fields, Capabilities extends Matr
       : never
     : Key]: Fields[Key]
 }
+
+type PossibleFields<Fields extends Schema.Struct.Fields, Capabilities extends MatrixCapabilities> = {
+  readonly [Key in keyof Fields as Fields[Key] extends VersionedField<Schema.Top, infer Availability>
+    ? IsAvailable<Capabilities, Availability> extends false
+      ? never
+      : Key
+    : Key]: Fields[Key]
+}
+
+type HasUncertainFields<Fields extends Schema.Struct.Fields, Capabilities extends MatrixCapabilities> = true extends {
+  [Key in keyof Fields]: Fields[Key] extends VersionedField<Schema.Top, infer Availability>
+    ? boolean extends IsAvailable<Capabilities, Availability>
+      ? true
+      : false
+    : false
+}[keyof Fields]
+  ? true
+  : false
+
+type DynamicFields<Fields extends Schema.Struct.Fields, Capabilities extends MatrixCapabilities> = {
+  readonly [Key in keyof Fields as Fields[Key] extends VersionedField<Schema.Top, infer Availability>
+    ? IsAvailable<Capabilities, Availability> extends true
+      ? Key
+      : never
+    : Key]: Fields[Key]
+} & {
+  readonly [Key in keyof Fields as Fields[Key] extends VersionedField<Schema.Top, infer Availability>
+    ? boolean extends IsAvailable<Capabilities, Availability>
+      ? Key
+      : never
+    : never]?: Fields[Key]
+}
+
+type Simplify<T> = { [Key in keyof T]: T[Key] } & {}
+
+type DynamicType<Fields extends Schema.Struct.Fields, Capabilities extends MatrixCapabilities> = Simplify<
+  Schema.Struct.Type<SelectFields<Fields, Capabilities>> & {
+    readonly [Key in keyof Fields as Fields[Key] extends VersionedField<Schema.Top, infer Availability>
+      ? boolean extends IsAvailable<Capabilities, Availability>
+        ? Key
+        : never
+      : never]?: Fields[Key]['Type']
+  }
+>
+
+type DynamicEncoded<Fields extends Schema.Struct.Fields, Capabilities extends MatrixCapabilities> = Simplify<
+  Schema.Struct.Encoded<SelectFields<Fields, Capabilities>> & {
+    readonly [Key in keyof Fields as Fields[Key] extends VersionedField<Schema.Top, infer Availability>
+      ? boolean extends IsAvailable<Capabilities, Availability>
+        ? Key
+        : never
+      : never]?: Fields[Key]['Encoded']
+  }
+>
+
+type VersionedStruct<Fields extends Schema.Struct.Fields, Capabilities extends MatrixCapabilities> =
+  HasUncertainFields<Fields, Capabilities> extends true
+    ? Schema.Codec<
+        DynamicType<Fields, Capabilities>,
+        DynamicEncoded<Fields, Capabilities>,
+        Schema.Struct.DecodingServices<PossibleFields<Fields, Capabilities>>,
+        Schema.Struct.EncodingServices<PossibleFields<Fields, Capabilities>>
+      > & { readonly fields: DynamicFields<Fields, Capabilities> }
+    : Schema.Struct<SelectFields<Fields, Capabilities>>
 
 const isAvailable = (capabilities: MatrixCapabilities, availability: FieldAvailability): boolean => {
   const [major, minor, patch] = capabilities.version
@@ -139,7 +221,7 @@ const isAvailable = (capabilities: MatrixCapabilities, availability: FieldAvaila
  */
 export const versionedStruct =
   <const Capabilities extends MatrixCapabilities>(capabilities: Capabilities) =>
-  <const Fields extends Schema.Struct.Fields>(fields: Fields): Schema.Struct<SelectFields<Fields, Capabilities>> => {
+  <const Fields extends Schema.Struct.Fields>(fields: Fields): VersionedStruct<Fields, Capabilities> => {
     const selected = Object.fromEntries(
       Reflect.ownKeys(fields).flatMap(key => {
         const field = fields[key]
@@ -149,5 +231,5 @@ export const versionedStruct =
       }),
     ) as SelectFields<Fields, Capabilities>
 
-    return Schema.Struct(selected)
+    return Schema.Struct(selected) as VersionedStruct<Fields, Capabilities>
   }

@@ -183,4 +183,5 @@ An MSC alternative represents the common transition from an unstable feature to 
 and `unstable` is included when either condition is satisfied. Use `availableWith` for fields that only have an unstable MSC gate.
 
 Capabilities can be stored by a static client or HTTP client after checking homeserver support at startup. Keeping the capability object
-literal (`as const`) gives the most precise inferred response types.
+literal (`as const`) gives the most precise inferred response types. When a version or MSC list is widened, gated fields whose availability
+cannot be decided statically are inferred as optional instead; the schema still selects them from the concrete capabilities at runtime.

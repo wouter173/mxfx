@@ -1,7 +1,15 @@
 import { Schema } from 'effect'
 import { describe, expect, expectTypeOf, test } from 'vitest'
 
-import { available, availableSince, availableWith, matrixVersion, versionedStruct } from './versioning.ts'
+import {
+  available,
+  availableSince,
+  availableWith,
+  matrixVersion,
+  type MatrixCapabilities,
+  type Msc,
+  versionedStruct,
+} from './versioning.ts'
 
 const v1_1 = matrixVersion(1, 1)
 const v1_2 = matrixVersion(1, 2)
@@ -49,6 +57,40 @@ describe('Matrix API schema versioning', () => {
 
     expect(Reflect.ownKeys(versionedStruct({ version: matrixVersion(1, 2, 2) })(patchFields).fields)).toEqual(['always'])
     expect(Reflect.ownKeys(versionedStruct({ version: matrixVersion(1, 2, 3) })(patchFields).fields)).toEqual(['always', 'later'])
+  })
+
+  test('models fields selected from widened capabilities as optional', () => {
+    const capabilities: MatrixCapabilities = { version: v1_2 }
+    const schema = versionedStruct(capabilities)(fields)
+
+    expect(Reflect.ownKeys(schema.fields)).toEqual(['roomId', 'stable', 'promoted'])
+    expect(Schema.decodeUnknownSync(schema)({ roomId: '!room:example.org', stable: 1, promoted: 'stable' })).toEqual({
+      roomId: '!room:example.org',
+      stable: 1,
+      promoted: 'stable',
+    })
+    expectTypeOf<typeof schema.Type>().toEqualTypeOf<
+      Readonly<{
+        roomId: string
+        stable?: number
+        experimental?: boolean
+        promoted?: string
+      }>
+    >()
+  })
+
+  test('models fields selected from a widened MSC array as optional', () => {
+    const mscs: ReadonlyArray<Msc> = ['MSC9999']
+    const schema = versionedStruct({ version: matrixVersion(1, 0), mscs })(fields)
+
+    expect(Reflect.ownKeys(schema.fields)).toEqual(['roomId', 'experimental'])
+    expectTypeOf<typeof schema.Type>().toEqualTypeOf<
+      Readonly<{
+        roomId: string
+        experimental?: boolean
+        promoted?: string
+      }>
+    >()
   })
 
   test('rejects invalid version components', () => {
