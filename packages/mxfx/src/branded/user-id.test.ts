@@ -29,8 +29,34 @@ describe('branded', () => {
     Effect.gen(function* () {
       const decode = Schema.decodeUnknownEffect(UserId.schema)
 
+      expect(yield* decode('@:matrix.org')).toBe('@:matrix.org')
       expect(yield* decode('@CapitalizedUserId:matrix.org')).toBe('@CapitalizedUserId:matrix.org')
       expect(yield* decode('@legacy~user:matrix.org')).toBe('@legacy~user:matrix.org')
+      expect(yield* decode('@\u00e9:matrix.org')).toBe('@\u00e9:matrix.org')
+      expect(yield* decode('@\ud83d\ude00:matrix.org')).toBe('@\ud83d\ude00:matrix.org')
+    }),
+  )
+
+  it.effect('should reject invalid Unicode in historical UserIds', () =>
+    Effect.gen(function* () {
+      const decode = Schema.decodeUnknownEffect(UserId.schema)
+
+      expect(Exit.isFailure(yield* Effect.exit(decode('@\ud800:matrix.org')))).toBeTruthy()
+      expect(Exit.isFailure(yield* Effect.exit(decode('@\udfff:matrix.org')))).toBeTruthy()
+      expect(Exit.isFailure(yield* Effect.exit(decode('@legacy\u0000user:matrix.org')))).toBeTruthy()
+    }),
+  )
+
+  it.effect('should enforce the 255-byte UTF-8 limit for historical UserIds', () =>
+    Effect.gen(function* () {
+      const decode = Schema.decodeUnknownEffect(UserId.schema)
+      const exactly255Bytes = `@${'\u00e9'.repeat(121)}a:matrix.org`
+      const moreThan255Bytes = `@${'\u00e9'.repeat(122)}:matrix.org`
+
+      expect(new TextEncoder().encode(exactly255Bytes).byteLength).toBe(255)
+      expect(yield* decode(exactly255Bytes)).toBe(exactly255Bytes)
+      expect(new TextEncoder().encode(moreThan255Bytes).byteLength).toBe(256)
+      expect(Exit.isFailure(yield* Effect.exit(decode(moreThan255Bytes)))).toBeTruthy()
     }),
   )
 
