@@ -1,8 +1,8 @@
 import { Effect, Layer, Context, Option, PubSub, Duration, Stream } from 'effect'
 
 import { endpoints, MatrixApi } from '../api/index.ts'
-import type { RoomId } from '../branded/index.ts'
 import { Store } from '../store/index.ts'
+import type { EventLike, EventUnit } from './event.ts'
 import { Reducers } from './sync/reducer.ts'
 
 const make = Effect.gen(function* () {
@@ -48,7 +48,7 @@ const make = Effect.gen(function* () {
   const syncLoop = () => Effect.forever(syncOnce)
 
   const onEvent = Effect.fnUntraced(function* <T extends EventLike>(eventUnit: EventUnit<T>, f: (event: T) => Effect.Effect<void, never>) {
-    yield* syncStream.pipe(eventUnit.predicate, Stream.runForEach(f), Effect.forkDetach)
+    yield* syncStream.pipe(eventUnit.stream, Stream.runForEach(f), Effect.forkDetach)
   })
 
   return {
@@ -58,11 +58,6 @@ const make = Effect.gen(function* () {
 })
 
 type SyncFrame = typeof endpoints.getSyncV3ResponseSchema.Type
-type EventLike = { roomId: RoomId; type: string; content: unknown }
-
-type EventUnit<T extends EventLike> = {
-  predicate: (frame: Stream.Stream<SyncFrame>) => Stream.Stream<T>
-}
 
 export class MatrixClient extends Context.Service<
   MatrixClient,

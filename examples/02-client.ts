@@ -1,33 +1,18 @@
 import { NodeHttpClient, NodeRuntime } from '@effect/platform-node'
-import { Cause, Config, Effect, Layer, References, Stream } from 'effect'
+import { Cause, Config, Effect, Layer, References, Schema } from 'effect'
 import { DevTools } from 'effect/unstable/devtools'
 import { MatrixApi, MatrixAuth, MatrixClient, MatrixConfig, Store } from 'mxfx'
 import { endpoints } from 'mxfx/api'
-import type { RoomId } from 'mxfx/branded'
 
-type SyncFrame = typeof endpoints.getSyncV3ResponseSchema.Type
-const lastPredicate = (frame: Stream.Stream<SyncFrame>) =>
-  frame.pipe(
-    Stream.flatMap(sync => Stream.fromIterable(Object.entries(sync.rooms?.join ?? {}))),
-    Stream.flatMap(([roomId, room]) =>
-      Stream.fromIterable(room.timeline?.events ?? []).pipe(Stream.map(event => ({ ...event, roomId: roomId as RoomId }))),
-    ),
-    Stream.filterEffect(event =>
-      Effect.gen(function* () {
-        yield* Effect.logDebug(event)
-        if (event.type !== 'm.room.message') return false
-        if (typeof event.content !== 'object' || event.content === null) return false
-
-        const content = event.content as { msgtype?: unknown; body?: unknown }
-
-        return (
-          typeof content.body === 'string' &&
-          content.body.trim().startsWith('!last') &&
-          (content.msgtype === 'm.text' || content.msgtype === 'm.notice' || content.msgtype === 'm.emote')
-        )
-      }),
-    ),
-  )
+const lastEvent = MatrixClient.makeEvent({
+  type: 'm.room.message',
+  bucket: 'rooms.joined',
+  schema: Schema.Struct({
+    msgtype: Schema.Union([Schema.Literal('m.text'), Schema.Literal('m.notice'), Schema.Literal('m.emote')]),
+    body: Schema.String,
+  }),
+  predicate: event => event.content.body.trim().startsWith('!last'),
+})
 
 const program = Effect.gen(function* () {
   const api = yield* MatrixApi.MatrixApi
@@ -37,7 +22,7 @@ const program = Effect.gen(function* () {
   const { userId, deviceId, isGuest } = yield* endpoints.getAccountWhoami().pipe(Effect.andThen(api.execute))
   yield* Effect.logDebug({ userId, deviceId, isGuest })
 
-  yield* client.onEvent({ predicate: lastPredicate }, event =>
+  yield* client.onEvent(lastEvent, event =>
     Effect.gen(function* () {
       const timeline = yield* store.getRoomTimeline(event.roomId)
       const lastMessages = timeline.filter(e => e.type === 'm.room.message' && e.sender !== userId).slice(-5)
