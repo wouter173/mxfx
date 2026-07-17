@@ -149,3 +149,38 @@ Endpoints:
 - [ ] GET /\_matrix/client/v1/rooms/{roomId}/threads
 - [ ] PUT /\_matrix/client/v3/rooms/{roomId}/typing/{userId}
 - [ ] GET /\_matrix/client/v3/voip/turnServer
+
+# API schemas
+
+## Versioning
+
+Matrix response fields can be gated by the specification version and Matrix Spec Changes supported by a homeserver. A versioned struct
+contains only supported fields at runtime, and its inferred TypeScript type contains the same fields:
+
+```ts
+import { Schema } from 'effect'
+import { Versioning } from 'mxfx/api/schema'
+
+const syncFields = {
+  nextBatch: Schema.String,
+  stableField: Versioning.availableSince(Versioning.matrixVersion(1, 2))(Schema.String),
+  promotedField: Versioning.available({
+    since: Versioning.matrixVersion(1, 3),
+    unstable: ['MSC1234'],
+  })(Schema.Boolean),
+}
+
+const capabilities = {
+  version: Versioning.matrixVersion(1, 2),
+  mscs: ['MSC1234'],
+} as const
+
+const SyncResponse = Versioning.versionedStruct(capabilities)(syncFields)
+// SyncResponse.Type includes nextBatch, stableField, and promotedField.
+```
+
+An MSC alternative represents the common transition from an unstable feature to a stable specification version. A field with both `since`
+and `unstable` is included when either condition is satisfied. Use `availableWith` for fields that only have an unstable MSC gate.
+
+Capabilities can be stored by a static client or HTTP client after checking homeserver support at startup. Keeping the capability object
+literal (`as const`) gives the most precise inferred response types.
