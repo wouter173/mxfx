@@ -58,7 +58,7 @@ const program = Effect.gen(function* () {
 
 const mxfxLive = MatrixClient.layerMatrixClient.pipe(
   Layer.provideMerge(MatrixApi.layer),
-  Layer.provideMerge(MatrixAuth.layerLegacyConfig({ accessToken: Config.string('MATRIX_ACCESS_TOKEN') })),
+  Layer.provideMerge(MatrixAuth.layerAccessToken({ accessToken: Config.string('MATRIX_ACCESS_TOKEN') })),
   Layer.provideMerge(MatrixConfig.layerConfig({ serverName: Config.string('MATRIX_HOME_SERVER') })),
   Layer.provideMerge(NodeHttpClient.layerNodeHttp),
   Layer.provideMerge(DevTools.layer()),
