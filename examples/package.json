@@ -5,8 +5,8 @@
   "author": "",
   "type": "module",
   "dependencies": {
-    "@effect/platform-node": "4.0.0-beta.84",
-    "effect": "4.0.0-beta.84",
+    "@effect/platform-node": "4.0.0-beta.94",
+    "effect": "4.0.0-beta.94",
     "mxfx": "workspace:^"
   }
 }
