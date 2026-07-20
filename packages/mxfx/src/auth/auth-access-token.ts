@@ -2,7 +2,7 @@ import { Config, Effect, Layer } from 'effect'
 
 import { MatrixAuth } from './auth.ts'
 
-export const layerLegacyConfig = (
+export const layerAccessToken = (
   optsConfig: Config.Wrap<{
     accessToken: string
   }>,
