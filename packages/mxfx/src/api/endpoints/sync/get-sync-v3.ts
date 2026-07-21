@@ -1,6 +1,6 @@
 import { Effect, Schema } from 'effect'
 
-import { EventId, RoomId } from '../../../branded/index.ts'
+import { EventId, RoomId, UserId } from '../../../branded/index.ts'
 import { baseEvent, strippedStateEvent, filterSchema } from '../../../schema/index.ts'
 import { encodeSnakeCaseSchema } from '../../schema/encode-case.ts'
 import { AccountData, StateSchema, Timeline } from '../../schema/sync.ts'
@@ -19,11 +19,20 @@ const optionsSchema = Schema.Struct({
 
 //TODO: don't export this from here, it's noy only used in this endpoint
 export const getSyncV3ResponseSchema = Schema.Struct({
-  accountData: Schema.optional(AccountData),
-  deviceLists: Schema.optional(Schema.Any), //TODO
-  deviceOneTimeKeysCount: Schema.optional(Schema.Record(Schema.String, Schema.Number)),
   nextBatch: Schema.String,
+  accountData: Schema.optional(AccountData),
   presence: Schema.optional(Schema.Struct({ events: Schema.Array(baseEvent) })),
+
+  deviceLists: Schema.optional(
+    Schema.Struct({
+      changed: Schema.optional(Schema.Array(UserId.schema)),
+      left: Schema.optional(Schema.Array(UserId.schema)),
+    }),
+  ),
+  deviceUnusedFallbackKeyTypes: Schema.optional(Schema.Array(Schema.String)),
+  deviceOneTimeKeysCount: Schema.optional(Schema.Record(Schema.String, Schema.Number.check(Schema.isGreaterThanOrEqualTo(0)))),
+  toDevice: Schema.optional(Schema.Struct({ events: Schema.Array(baseEvent) })),
+
   rooms: Schema.optional(
     Schema.Struct({
       invite: Schema.optional(
@@ -89,7 +98,6 @@ export const getSyncV3ResponseSchema = Schema.Struct({
       ), //TODO
     }),
   ),
-  toDevice: Schema.optional(Schema.Struct({ events: Schema.Array(baseEvent) })),
 })
 
 const schema = getSyncV3ResponseSchema
