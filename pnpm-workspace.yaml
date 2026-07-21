@@ -1,6 +1,8 @@
+ignoreWorkspaceRootCheck: false
 packages:
   - examples
   - packages/mxfx
+  - packages/crypto-node
 allowBuilds:
+  "@matrix-org/matrix-sdk-crypto-nodejs": true
   esbuild: true
-  msgpackr-extract: set this to true or false
