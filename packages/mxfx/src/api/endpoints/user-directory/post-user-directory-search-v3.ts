@@ -1,9 +1,8 @@
-import { Effect, Schema } from 'effect'
-import { HttpBody } from 'effect/unstable/http'
+import { Schema } from 'effect'
 
 import { MxcUri } from '../../../branded/index.ts'
-import { encodeSnakeCaseSchema } from '../../schema/encode-case.ts'
 import { makeEndpoint } from '../endpoint.ts'
+import * as RequestOptions from '../request-options.ts'
 
 const optionsSchema = Schema.Struct({
   limit: Schema.optional(Schema.Int),
@@ -31,8 +30,4 @@ const schema = Schema.Struct({
  * @see https://spec.matrix.org/v1.17/client-server-api/#post_matrixclientv3user_directorysearch
  */
 export const postUserDirectorySearchV3 = (options: Schema.Schema.Type<typeof optionsSchema>) =>
-  Effect.gen(function* () {
-    const body = yield* Schema.encodeEffect(optionsSchema.pipe(encodeSnakeCaseSchema))(options).pipe(Effect.andThen(HttpBody.json))
-
-    return yield* makeEndpoint('POST', { auth: true, body, schema })`/v3/user_directory/search`
-  })
+  makeEndpoint('POST', { auth: true, body: RequestOptions.body(optionsSchema, options), schema })`/v3/user_directory/search`

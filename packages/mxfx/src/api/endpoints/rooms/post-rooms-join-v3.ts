@@ -2,6 +2,7 @@ import { Schema } from 'effect'
 
 import { RoomId } from '../../../branded/room-id.ts'
 import { makeEndpoint } from '../endpoint.ts'
+import * as RequestOptions from '../request-options.ts'
 
 const schema = Schema.Struct({
   roomId: RoomId.schema,
@@ -19,4 +20,5 @@ const schema = Schema.Struct({
  *
  * @see https://spec.matrix.org/v1.17/client-server-api/#post_matrixclientv3roomsroomidjoin
  */
-export const postRoomsJoinV3 = ({ roomId }: { roomId: RoomId }) => makeEndpoint('POST', { auth: true, schema })`/v3/rooms/${roomId}/join`
+export const postRoomsJoinV3 = ({ roomId }: { roomId: RoomId }) =>
+  makeEndpoint('POST', { auth: true, schema })`/v3/rooms/${RequestOptions.path(RoomId.schema, roomId)}/join`

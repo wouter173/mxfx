@@ -29,6 +29,15 @@ type AnyOptionalWrapper = AnyWrapper & {
     readonly members: ReadonlyArray<Schema.Top>
   }
 }
+type AnyFromJsonString = {
+  readonly from: {
+    readonly ast: {
+      readonly _tag: 'String'
+      readonly annotations?: { readonly contentMediaType?: string }
+    }
+  }
+  readonly to: Schema.Top
+}
 
 const isSchemaLike = (value: unknown): value is object | Function =>
   (typeof value === 'object' || typeof value === 'function') && value !== null
@@ -49,6 +58,13 @@ const isOptionalWrapperSchema = (value: unknown): value is AnyOptionalWrapper =>
   (value as AnyOptionalWrapper).schema !== null &&
   'members' in (value as AnyOptionalWrapper).schema &&
   (value as AnyOptionalWrapper).schema.members.some(member => member.ast._tag === 'Undefined')
+const isFromJsonStringSchema = (value: unknown): value is AnyFromJsonString =>
+  isSchemaLike(value) &&
+  'from' in value &&
+  'to' in value &&
+  isSchemaLike((value as AnyFromJsonString).from) &&
+  (value as AnyFromJsonString).from.ast._tag === 'String' &&
+  (value as AnyFromJsonString).from.ast.annotations?.contentMediaType === 'application/json'
 
 const encodeSnakeCaseStruct = (schema: AnyStruct): Schema.Top => {
   const nestedFields = Object.fromEntries(
@@ -83,6 +99,10 @@ const encodeSnakeCaseSchemaInternal = (schema: Schema.Top): Schema.Top => {
   if (isOptionalWrapperSchema(schema)) {
     const member = schema.schema.members.find(current => current.ast._tag !== 'Undefined')
     return member ? Schema.optional(encodeSnakeCaseSchemaInternal(member)) : schema
+  }
+
+  if (isFromJsonStringSchema(schema)) {
+    return Schema.fromJsonString(encodeSnakeCaseSchemaInternal(schema.to))
   }
 
   return schema

@@ -3,6 +3,7 @@ import { Schema } from 'effect'
 import { MxcUri } from '../../../branded/mxc-uri.ts'
 import { UserId } from '../../../branded/user-id.ts'
 import { makeEndpoint } from '../endpoint.ts'
+import * as RequestOptions from '../request-options.ts'
 
 const schema = Schema.Struct({
   avatarUrl: Schema.optional(Schema.NullOr(MxcUri.schema)),
@@ -21,7 +22,8 @@ const schema = Schema.Struct({
  *
  * @see https://spec.matrix.org/v1.17/client-server-api/#get_matrixclientv3profileuserid
  */
-export const getProfileV3 = ({ userId }: { userId: UserId }) => makeEndpoint('GET', { auth: true, schema })`/v3/profile/${userId}`
+export const getProfileV3 = ({ userId }: { userId: UserId }) =>
+  makeEndpoint('GET', { auth: true, schema })`/v3/profile/${RequestOptions.path(UserId.schema, userId)}`
 
 /*
  * TODO: explore this pattern:

@@ -1,7 +1,8 @@
 import { Schema } from 'effect'
 
-import type { ServerName } from '../../../branded/server-name.ts'
+import { ServerName } from '../../../branded/server-name.ts'
 import { makeEndpoint } from '../endpoint.ts'
+import * as RequestOptions from '../request-options.ts'
 
 const schema = Schema.Struct({
   'm.homeserver': Schema.Struct({
@@ -18,4 +19,8 @@ const schema = Schema.Struct({
  * @see https://spec.matrix.org/v1.17/client-server-api/#getwell-knownmatrixclient
  */
 export const getWellKnown = ({ serverName }: { serverName: ServerName }) =>
-  makeEndpoint('GET', { auth: false, schema, encode: false })`https://${serverName}/.well-known/matrix/client`
+  makeEndpoint('GET', {
+    auth: false,
+    schema,
+    encode: false,
+  })`https://${RequestOptions.path(ServerName.schema, serverName)}/.well-known/matrix/client`
