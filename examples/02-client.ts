@@ -39,11 +39,7 @@ const program = Effect.gen(function* () {
   yield* client.onEvent({ predicate: pingPredicate }, event =>
     Effect.gen(function* () {
       yield* endpoints
-        .putRoomsSendV3({
-          content: { msgtype: 'm.text', body: 'pong' },
-          eventType: 'm.room.message',
-          roomId: event.roomId,
-        })
+        .putRoomsSendV3({ content: { msgtype: 'm.text', body: 'pong' }, eventType: 'm.room.message', roomId: event.roomId })
         .pipe(Effect.andThen(api.execute))
     }).pipe(Effect.catchCause(cause => Effect.log(cause))),
   )
