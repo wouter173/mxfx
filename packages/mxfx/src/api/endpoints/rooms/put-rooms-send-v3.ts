@@ -38,6 +38,11 @@ const optionsSchema = Schema.Union([
       }),
     ]),
   }),
+  Schema.Struct({
+    ...commonOptionsSchema.fields,
+    eventType: Schema.String,
+    content: Schema.String,
+  }),
 ])
 
 /**

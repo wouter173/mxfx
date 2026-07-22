@@ -82,7 +82,7 @@ describe('post-keys-quert-v3', () => {
       const alice = yield* UserId.make('@alice:example.com')
       const deviceKeys = { [alice]: [] }
 
-      const result = yield* postKeysQueryV3({ deviceKeys }).pipe(Effect.andThen(api.execute))
+      const result = yield* postKeysQueryV3({ deviceKeys, timeout: 10_000 }).pipe(Effect.andThen(api.execute))
 
       expect(result.deviceKeys).toStrictEqual({
         [alice]: {

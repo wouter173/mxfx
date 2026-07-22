@@ -18,13 +18,16 @@ const keyObjectSchema = Schema.Struct({
   signatures: Schema.Record(UserId.schema, Schema.Unknown),
 })
 
-const optionsSchema = Schema.Struct({
-  deviceKeys: Schema.optional(deviceKeysSchema),
-  fallbackKeys: Schema.optional(
-    Schema.Record(Schema.String, Schema.Union([Schema.String, keyObjectSchema.pipe(Schema.fieldsAssign({ fallback: Schema.Boolean }))])),
-  ),
-  oneTimeKeys: Schema.optional(Schema.Record(Schema.String, Schema.Union([Schema.String, keyObjectSchema]))),
-})
+const optionsSchema = Schema.Union([
+  Schema.Struct({
+    deviceKeys: Schema.optional(deviceKeysSchema),
+    fallbackKeys: Schema.optional(
+      Schema.Record(Schema.String, Schema.Union([Schema.String, keyObjectSchema.pipe(Schema.fieldsAssign({ fallback: Schema.Boolean }))])),
+    ),
+    oneTimeKeys: Schema.optional(Schema.Record(Schema.String, Schema.Union([Schema.String, keyObjectSchema]))),
+  }),
+  Schema.String,
+])
 
 const schema = Schema.Struct({
   oneTimeKeyCounts: Schema.Record(Schema.String, Schema.Number),
@@ -38,10 +41,10 @@ const schema = Schema.Struct({
  *
  * @see https://spec.matrix.org/latest/client-server-api/#post_matrixclientv3keysupload
  */
-export const postKeysUploadV3 = Effect.fn(function* (options: (typeof optionsSchema)['~type.make.in']) {
+export const postKeysUploadV3 = Effect.fn(function* (options: typeof optionsSchema.Type) {
   const body = yield* optionsSchema.makeEffect(options).pipe(
     Effect.andThen(Schema.encodeUnknownEffect(optionsSchema.pipe(encodeSnakeCaseSchema))),
-    Effect.andThen(body => HttpBody.json(body)),
+    Effect.andThen(body => (typeof body === 'string' ? Effect.succeed(HttpBody.text(body, 'application/json')) : HttpBody.json(body))),
   )
 
   return yield* makeEndpoint('POST', { auth: true, schema, body })`/v3/keys/upload`

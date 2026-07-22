@@ -23,10 +23,10 @@ const crossSigningKeySchema = Schema.Struct({
   signatures: signaturesSchema,
 })
 
-const optionsSchema = Schema.Record(
-  UserId.schema,
-  Schema.Record(Schema.String, Schema.Union([deviceKeysSchema, crossSigningKeySchema, Schema.Unknown])),
-)
+const optionsSchema = Schema.Union([
+  Schema.Record(UserId.schema, Schema.Record(Schema.String, Schema.Union([deviceKeysSchema, crossSigningKeySchema, Schema.Unknown]))),
+  Schema.String,
+])
 
 const schema = Schema.Struct({
   failures: Schema.optional(Schema.Record(UserId.schema, Schema.Record(Schema.String, BaseErrorSchema))),
@@ -42,10 +42,11 @@ const schema = Schema.Struct({
  *
  * @see https://spec.matrix.org/unstable/client-server-api/#post_matrixclientv3keyssignaturesupload
  */
-export const postKeysSignaturesUploadV3 = Effect.fn(function* (options: (typeof optionsSchema)['~type.make.in']) {
-  const body = yield* optionsSchema
-    .makeEffect(options)
-    .pipe(Effect.andThen(Schema.encodeUnknownEffect(optionsSchema.pipe(encodeSnakeCaseSchema))), Effect.andThen(HttpBody.json))
+export const postKeysSignaturesUploadV3 = Effect.fn(function* (options: typeof optionsSchema.Type) {
+  const body = yield* optionsSchema.makeEffect(options).pipe(
+    Effect.andThen(Schema.encodeUnknownEffect(optionsSchema.pipe(encodeSnakeCaseSchema))),
+    Effect.andThen(body => (typeof body === 'string' ? Effect.succeed(HttpBody.text(body, 'application/json')) : HttpBody.json(body))),
+  )
 
   return yield* makeEndpoint('POST', { auth: true, schema, body })`/v3/keys/signatures/upload`
 })

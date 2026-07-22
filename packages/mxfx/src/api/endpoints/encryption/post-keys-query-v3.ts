@@ -5,10 +5,13 @@ import { UserId } from '../../../branded/user-id.ts'
 import { encodeSnakeCaseSchema } from '../../schema/encode-case.ts'
 import { makeEndpoint } from '../endpoint.ts'
 
-const optionsSchema = Schema.Struct({
-  deviceKeys: Schema.Record(UserId.schema, Schema.Array(Schema.String)),
-  timeout: Schema.Number.check(Schema.isGreaterThanOrEqualTo(0)).pipe(Schema.withConstructorDefault(Effect.succeed(10_000))),
-})
+const optionsSchema = Schema.Union([
+  Schema.Struct({
+    deviceKeys: Schema.Record(UserId.schema, Schema.Array(Schema.String)),
+    timeout: Schema.Number.check(Schema.isGreaterThanOrEqualTo(0)),
+  }),
+  Schema.String,
+])
 
 const unsignedDeviceInfoSchema = Schema.Struct({
   deviceDisplayName: Schema.optional(Schema.String),
@@ -46,10 +49,10 @@ const schema = Schema.Struct({
  *
  * @see https://spec.matrix.org/latest/client-server-api/#post_matrixclientv3keysquery
  */
-export const postKeysQueryV3 = Effect.fn(function* (options: (typeof optionsSchema)['~type.make.in']) {
+export const postKeysQueryV3 = Effect.fn(function* (options: typeof optionsSchema.Type) {
   const body = yield* optionsSchema.makeEffect(options).pipe(
     Effect.andThen(Schema.encodeEffect(optionsSchema.pipe(encodeSnakeCaseSchema))),
-    Effect.andThen(body => HttpBody.json(body)),
+    Effect.andThen(body => (typeof body === 'string' ? Effect.succeed(HttpBody.text(body, 'application/json')) : HttpBody.json(body))),
   )
 
   return yield* makeEndpoint('POST', { auth: true, schema, body })`/v3/keys/query`

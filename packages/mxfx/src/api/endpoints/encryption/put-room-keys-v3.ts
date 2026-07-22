@@ -18,7 +18,7 @@ const roomKeyBackupSchema = Schema.Struct({
 
 const optionsSchema = Schema.Struct({
   version: Schema.String,
-  rooms: Schema.Record(RoomId.schema, roomKeyBackupSchema),
+  body: Schema.Union([Schema.Struct({ rooms: Schema.Record(RoomId.schema, roomKeyBackupSchema) }), Schema.String]),
 })
 
 const schema = Schema.Struct({
@@ -37,7 +37,9 @@ const schema = Schema.Struct({
 export const putRoomKeysV3 = Effect.fn(function* (options: typeof optionsSchema.Type) {
   const body = yield* optionsSchema.makeEffect(options).pipe(
     Effect.andThen(Schema.encodeUnknownEffect(optionsSchema.pipe(encodeSnakeCaseSchema))),
-    Effect.andThen(({ rooms }) => HttpBody.json({ rooms })),
+    Effect.andThen(({ body }) =>
+      typeof body === 'string' ? Effect.succeed(HttpBody.text(body, 'application/json')) : HttpBody.json(body),
+    ),
   )
 
   return yield* makeEndpoint('PUT', { auth: true, schema, body, params: { version: options.version } })`/v3/room_keys/keys`

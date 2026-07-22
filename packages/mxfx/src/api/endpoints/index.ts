@@ -1,3 +1,5 @@
+export * from './endpoint.ts'
+
 export * from './discovery/index.ts'
 export * from './capabilities/index.ts'
 export * from './auth/index.ts'
@@ -6,3 +8,5 @@ export * from './sync/index.ts'
 export * from './profile/index.ts'
 export * from './rooms/index.ts'
 export * from './account/index.ts'
+export * from './encryption/index.ts'
+export * from './to-device/index.ts'

@@ -59,7 +59,16 @@ const mockApiRequest = {
 }
 
 describe('post-keys-upload-v3', () => {
-  it.effect('upload a set of keys', () =>
+  it.effect('upload a set of keys, string body', () =>
+    Effect.gen(function* () {
+      const api = yield* MatrixApi
+
+      const result = yield* postKeysUploadV3(JSON.stringify(mockApiRequest)).pipe(Effect.andThen(api.executeRaw))
+
+      expect(result).toStrictEqual(JSON.stringify(mockApiResponse))
+    }).pipe(Effect.provide(makeMockMatrixApiLayer({ path: '/v3/keys/upload', response: mockApiResponse, request: mockApiRequest }))),
+  )
+  it.effect('upload a set of keys, typed body', () =>
     Effect.gen(function* () {
       const api = yield* MatrixApi
 

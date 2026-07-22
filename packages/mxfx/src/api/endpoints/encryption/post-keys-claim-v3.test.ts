@@ -36,7 +36,7 @@ describe('post-keys-claim-v3', () => {
       const alice = yield* UserId.make('@alice:example.com')
       const oneTimeKeys = { [alice]: { JLAFKJWSCS: 'signed_curve25519' } }
 
-      const result = yield* postKeysClaimV3({ oneTimeKeys }).pipe(Effect.andThen(api.execute))
+      const result = yield* postKeysClaimV3({ oneTimeKeys, timeout: 10_000 }).pipe(Effect.andThen(api.execute))
 
       expect(result).toStrictEqual({ oneTimeKeys: mockApiResponse.one_time_keys })
     }).pipe(Effect.provide(makeMockMatrixApiLayer({ path: '/v3/keys/claim', response: mockApiResponse, request: mockApiRequest }))),

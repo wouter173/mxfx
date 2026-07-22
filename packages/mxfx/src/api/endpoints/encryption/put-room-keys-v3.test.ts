@@ -39,17 +39,19 @@ describe('post-keys-claim-v3', () => {
 
       const result = yield* putRoomKeysV3({
         version: '1',
-        rooms: {
-          [room]: {
-            sessions: {
-              ['sessionid1']: {
-                firstMessageIndex: 1,
-                forwardedCount: 0,
-                isVerified: true,
-                sessionData: {
-                  ciphertext: 'base64+ciphertext+of+JSON+data',
-                  ephemeral: 'base64+ephemeral+key',
-                  mac: 'base64+mac+of+ciphertext',
+        body: {
+          rooms: {
+            [room]: {
+              sessions: {
+                sessionid1: {
+                  firstMessageIndex: 1,
+                  forwardedCount: 0,
+                  isVerified: true,
+                  sessionData: {
+                    ciphertext: 'base64+ciphertext+of+JSON+data',
+                    ephemeral: 'base64+ephemeral+key',
+                    mac: 'base64+mac+of+ciphertext',
+                  },
                 },
               },
             },

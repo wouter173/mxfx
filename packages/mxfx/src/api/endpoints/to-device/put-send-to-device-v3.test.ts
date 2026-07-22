@@ -19,7 +19,7 @@ describe('put-send-to-device-v3', () => {
       const result = yield* putSendToDeviceV3({
         eventType: 'message-type',
         transactionId: 'transaction-id',
-        messages: { [alice]: { TLLBEANAAG: { example_content_key: 'value' } } },
+        body: { messages: { [alice]: { TLLBEANAAG: { example_content_key: 'value' } } } },
       }).pipe(Effect.andThen(api.execute))
 
       expect(result).toStrictEqual({})
