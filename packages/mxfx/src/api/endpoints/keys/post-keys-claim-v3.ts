@@ -7,7 +7,7 @@ import { makeEndpoint } from '../endpoint.ts'
 
 const optionsSchema = Schema.Struct({
   oneTimeKeys: Schema.Record(UserId.schema, Schema.Record(Schema.String, Schema.String)),
-  timeout: Schema.Number.check(Schema.isGreaterThanOrEqualTo(0)).pipe(Schema.withDecodingDefaultType(Effect.succeed(10_000))),
+  timeout: Schema.Number.check(Schema.isGreaterThanOrEqualTo(0)).pipe(Schema.withConstructorDefault(Effect.succeed(10_000))),
 })
 
 const keyObjectSchema = Schema.Struct({
@@ -40,8 +40,9 @@ const schema = Schema.Struct({
  *
  * @see https://spec.matrix.org/latest/client-server-api/#post_matrixclientv3keysclaim
  */
-export const postKeysClaimV3 = Effect.fn(function* (options: typeof optionsSchema.Type) {
-  const body = yield* Schema.encodeEffect(optionsSchema.pipe(encodeSnakeCaseSchema))(options).pipe(
+export const postKeysClaimV3 = Effect.fn(function* (options: (typeof optionsSchema)['~type.make.in']) {
+  const body = yield* optionsSchema.makeEffect(options).pipe(
+    Effect.andThen(Schema.encodeEffect(optionsSchema.pipe(encodeSnakeCaseSchema))),
     Effect.andThen(body => HttpBody.json(body)),
   )
 
