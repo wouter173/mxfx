@@ -1,9 +1,8 @@
 import { Effect, Schema, Random } from 'effect'
-import { HttpBody } from 'effect/unstable/http'
 
 import { EventId, RoomId } from '../../../branded/index.ts'
-import { encodeSnakeCaseSchema } from '../../schema/encode-case.ts'
 import { makeEndpoint } from '../endpoint.ts'
+import * as RequestOptions from '../request-options.ts'
 
 const schema = Schema.Struct({
   eventId: EventId.schema,
@@ -19,24 +18,26 @@ const commonMessageContentSchema = Schema.Struct({
   msgtype: Schema.String,
 })
 
+const messageContentSchema = Schema.Union([
+  Schema.Struct({
+    ...commonMessageContentSchema.fields,
+    'm.newContent': Schema.Struct({ body: Schema.String, msgtype: Schema.String }),
+    'm.relatesTo': Schema.Struct({
+      relType: Schema.Literal('m.replace'),
+      eventId: EventId.schema,
+    }),
+  }),
+  commonMessageContentSchema,
+])
+
+const eventTypeSchema = Schema.Literal('m.room.message')
+
 const optionsSchema = Schema.Union([
   //TODO: support more event types
   Schema.Struct({
     ...commonOptionsSchema.fields,
-    eventType: Schema.Literal('m.room.message'),
-    content: Schema.Union([
-      Schema.Struct({
-        ...commonMessageContentSchema.fields,
-        'm.newContent': Schema.Struct({ body: Schema.String, msgtype: Schema.String }),
-        'm.relatesTo': Schema.Struct({
-          relType: Schema.Literal('m.replace'),
-          eventId: EventId.schema,
-        }),
-      }),
-      Schema.Struct({
-        ...commonMessageContentSchema.fields,
-      }),
-    ]),
+    eventType: eventTypeSchema,
+    content: messageContentSchema,
   }),
 ])
 
@@ -53,12 +54,16 @@ const optionsSchema = Schema.Union([
  * @see https://spec.matrix.org/v1.17/client-server-api/#put_matrixclientv3roomsroomidsendeventtypetxnid
  */
 export const putRoomsSendV3 = (options: typeof optionsSchema.Type) =>
-  Effect.gen(function* () {
-    const body = yield* Schema.encodeEffect(optionsSchema.pipe(encodeSnakeCaseSchema))(options).pipe(
-      Effect.andThen(({ content }) => HttpBody.json(content)),
-    )
-
-    const transactionId = options.transactionId ? options.transactionId : yield* Random.nextIntBetween(1, 10000000) // TODO: used be uuidv4 but was removed from random module into crypto, but haven't bothered to check how possible it is to DI anything here bc crypto gotta be injected
-
-    return yield* makeEndpoint('PUT', { auth: true, schema, body })`/v3/rooms/${options.roomId}/send/${options.eventType}/${transactionId}`
-  })
+  (options.transactionId ? Effect.succeed(options.transactionId) : Random.nextIntBetween(1, 10000000).pipe(Effect.map(String))).pipe(
+    Effect.flatMap(
+      transactionId =>
+        makeEndpoint('PUT', {
+          auth: true,
+          schema,
+          body: RequestOptions.body(messageContentSchema, options.content),
+        })`/v3/rooms/${RequestOptions.path(
+          RoomId.schema,
+          options.roomId,
+        )}/send/${RequestOptions.path(eventTypeSchema, options.eventType)}/${RequestOptions.path(Schema.String, transactionId)}`,
+    ),
+  )

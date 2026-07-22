@@ -1,8 +1,7 @@
-import { Effect, Schema } from 'effect'
-import { HttpBody } from 'effect/unstable/http'
+import { Schema } from 'effect'
 
-import { encodeSnakeCaseSchema } from '../../schema/encode-case.ts'
 import { makeEndpoint } from '../endpoint.ts'
+import * as RequestOptions from '../request-options.ts'
 
 const commonOptionsSchema = Schema.Struct({
   initialDeviceDisplayName: Schema.optional(Schema.String),
@@ -47,9 +46,4 @@ const schema = Schema.Struct({
  * @see https://spec.matrix.org/v1.17/client-server-api/#post_matrixclientv3login
  */
 export const postLoginV3 = (options: Schema.Schema.Type<typeof optionsSchema>) =>
-  Effect.gen(function* () {
-    //TODO: this is weird encodeSnakeCaseSchema should not be exposed like this
-    const body = yield* Schema.encodeEffect(optionsSchema.pipe(encodeSnakeCaseSchema))(options).pipe(Effect.andThen(HttpBody.json))
-
-    return yield* makeEndpoint('POST', { auth: false, body, schema })`/v3/login`
-  })
+  makeEndpoint('POST', { auth: false, body: RequestOptions.body(optionsSchema, options), schema })`/v3/login`

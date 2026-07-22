@@ -2,6 +2,7 @@ import { Effect, Schema } from 'effect'
 import { HttpBody, HttpClientRequest, HttpClientResponse, UrlParams } from 'effect/unstable/http'
 
 import { encodeSnakeCaseSchema } from '../schema/encode-case.ts'
+import * as RequestOptions from './request-options.ts'
 
 export type MatrixEndpoint<S extends Schema.Top> = {
   path: typeof pathBrandSchema.Type
@@ -20,40 +21,58 @@ const makeEndpointFromConfig = <S extends Schema.Top>(endpoint: MatrixEndpoint<S
 
 type PathValue = string | number
 
+type EndpointBuilder<S extends Schema.Top> = (
+  strings: TemplateStringsArray,
+  ...values: readonly (PathValue | RequestOptions.Path)[]
+) => Effect.Effect<MatrixEndpoint<S>, HttpBody.HttpBodyError | Schema.SchemaError>
+
 type EndpointBaseOptions<S extends Schema.Top> = {
   schema: S
-  params?: UrlParams.Input
+  query?: RequestOptions.Query
   encode?: boolean
 }
 
 type EndpointWithBodyOptions<S extends Schema.Top> = EndpointBaseOptions<S> & {
   auth: boolean
-  body?: HttpBody.HttpBody
+  body?: RequestOptions.Body
 }
 
 type GetOptions<S extends Schema.Top> = EndpointBaseOptions<S> & { auth: boolean }
 type WriteOptions<S extends Schema.Top> = EndpointWithBodyOptions<S>
 
-export function makeEndpoint<S extends Schema.Top>(
-  method: 'GET',
-  options: GetOptions<S>,
-): (strings: TemplateStringsArray, ...values: readonly PathValue[]) => Effect.Effect<MatrixEndpoint<S>>
+export function makeEndpoint<S extends Schema.Top>(method: 'GET', options: GetOptions<S>): EndpointBuilder<S>
 export function makeEndpoint<S extends Schema.Top>(
   method: 'POST' | 'PUT' | 'DELETE' | 'PATCH',
   options: WriteOptions<S>,
-): (strings: TemplateStringsArray, ...values: readonly PathValue[]) => Effect.Effect<MatrixEndpoint<S>>
+): EndpointBuilder<S>
 export function makeEndpoint<S extends Schema.Top>(method: MatrixEndpoint<S>['method'], options: GetOptions<S> | WriteOptions<S>) {
+  return make(method, options)
+}
+
+const make = <S extends Schema.Top>(method: MatrixEndpoint<S>['method'], options: GetOptions<S> | WriteOptions<S>) => {
   const encode = options.encode ?? true
 
-  return (strings: TemplateStringsArray, ...values: readonly PathValue[]) =>
-    makeEndpointFromConfig({
-      auth: options.auth,
-      method,
-      path: apiPath({ encode })(strings, ...values),
-      params: options.params,
-      schema: options.schema,
-      body: method === 'GET' ? undefined : 'body' in options ? options.body : undefined,
-    } as MatrixEndpoint<S>)
+  return (strings: TemplateStringsArray, ...values: readonly (PathValue | RequestOptions.Path)[]) => {
+    const path = Effect.all(
+      values.map(value => (RequestOptions.isPath(value) ? RequestOptions.encodePath(value) : Effect.succeed(String(value)))),
+    ).pipe(Effect.map(values => apiPath({ encode })(strings, ...values)))
+    const params = options.query ? RequestOptions.encodeQuery(options.query) : Effect.succeed(UrlParams.empty)
+    const body =
+      method !== 'GET' && 'body' in options && options.body ? RequestOptions.encodeBody(options.body) : Effect.succeed(HttpBody.empty)
+
+    return Effect.all({ body, params, path }).pipe(
+      Effect.flatMap(({ body, params, path }) =>
+        makeEndpointFromConfig({
+          auth: options.auth,
+          method,
+          path,
+          params,
+          schema: options.schema,
+          body: method === 'GET' ? undefined : body,
+        } as MatrixEndpoint<S>),
+      ),
+    )
+  }
 }
 
 export const makeHttpRequest = <S extends Schema.Top>(endpoint: MatrixEndpoint<S>) =>

@@ -1,15 +1,15 @@
-import { Effect, Schema } from 'effect'
+import { Schema } from 'effect'
 
 import { EventId, RoomId } from '../../../branded/index.ts'
 import { baseEvent, strippedStateEvent, filterSchema } from '../../../schema/index.ts'
-import { encodeSnakeCaseSchema } from '../../schema/encode-case.ts'
 import { AccountData, StateSchema, Timeline } from '../../schema/sync.ts'
 import { makeEndpoint } from '../endpoint.ts'
+import * as RequestOptions from '../request-options.ts'
 
 const presenceSchema = Schema.Union([Schema.Literal('online'), Schema.Literal('offline'), Schema.Literal('unavailable')])
 
 const optionsSchema = Schema.Struct({
-  filter: Schema.optional(Schema.fromJsonString(encodeSnakeCaseSchema(filterSchema))), //TODO: remove snakecase handling here
+  filter: Schema.optional(Schema.fromJsonString(filterSchema)),
   fullState: Schema.optional(Schema.Boolean),
   setPresence: Schema.optional(presenceSchema),
   since: Schema.optional(Schema.String),
@@ -105,8 +105,4 @@ const schema = getSyncV3ResponseSchema
  * @see https://spec.matrix.org/v1.17/client-server-api/#get_matrixclientv3sync
  */
 export const getSyncV3 = (options: typeof optionsSchema.Type) =>
-  Effect.gen(function* () {
-    const params = yield* Schema.encodeEffect(encodeSnakeCaseSchema(optionsSchema))(options) //TODO: remove snakecase handling here
-
-    return yield* makeEndpoint('GET', { auth: true, params, schema })`/v3/sync`
-  })
+  makeEndpoint('GET', { auth: true, query: RequestOptions.query(optionsSchema, options), schema })`/v3/sync`
