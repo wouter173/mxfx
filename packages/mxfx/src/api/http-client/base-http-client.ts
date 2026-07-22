@@ -2,7 +2,7 @@ import { Effect, Layer, Schema, Context } from 'effect'
 import { HttpClient } from 'effect/unstable/http'
 
 import { ApiHttpError } from '../error.ts'
-import { MatrixApiErrorContentSchema } from '../schema/error.ts'
+import { matrixApiErrorContentSchema } from '../schema/error.ts'
 import { withLogging } from './logging.ts'
 
 const make = Effect.gen(function* () {
@@ -13,7 +13,7 @@ const make = Effect.gen(function* () {
       res => res.status >= 200 && res.status < 400,
       res =>
         res.json.pipe(
-          Effect.andThen(Schema.decodeUnknownEffect(MatrixApiErrorContentSchema)),
+          Effect.andThen(Schema.decodeUnknownEffect(matrixApiErrorContentSchema)),
           Effect.catch(err =>
             Effect.logError(`Failed to decode MatrixApiErrorContent: ${err}`).pipe(
               Effect.as({ errcode: 'M_UNKNOWN' as const, error: 'Unknown error' }),

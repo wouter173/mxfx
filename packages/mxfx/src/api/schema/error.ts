@@ -61,7 +61,7 @@ export const UnknownErrorSchema = Schema.Struct({
   errcode: Schema.Literal('M_UNKNOWN'),
 })
 
-export const MatrixApiErrorContentSchema = Schema.Union([
+export const matrixApiErrorContentSchema = Schema.Union([
   ForbiddenErrorSchema,
   UnknownTokenErrorSchema,
   MissingTokenErrorSchema,
@@ -75,4 +75,4 @@ export const MatrixApiErrorContentSchema = Schema.Union([
   UnknownErrorSchema,
 ])
 
-export type MatrixApiErrorContent = typeof MatrixApiErrorContentSchema.Type
+export type MatrixApiErrorContent = typeof matrixApiErrorContentSchema.Type
