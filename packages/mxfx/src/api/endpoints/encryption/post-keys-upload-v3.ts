@@ -44,5 +44,5 @@ export const postKeysUploadV3 = Effect.fn(function* (options: (typeof optionsSch
     Effect.andThen(body => HttpBody.json(body)),
   )
 
-  return yield* makeEndpoint('POST', { auth: true, schema, body })`'/v3/keys/upload'`
+  return yield* makeEndpoint('POST', { auth: true, schema, body })`/v3/keys/upload`
 })

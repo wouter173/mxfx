@@ -38,7 +38,7 @@ describe('post-keys-claim-v3', () => {
 
       const result = yield* postKeysClaimV3({ oneTimeKeys }).pipe(Effect.andThen(api.execute))
 
-      expect(result).toStrictEqual({ oneTimeKeys })
-    }).pipe(Effect.provide(makeMockMatrixApiLayer({ response: mockApiResponse, request: mockApiRequest }))),
+      expect(result).toStrictEqual({ oneTimeKeys: mockApiResponse.one_time_keys })
+    }).pipe(Effect.provide(makeMockMatrixApiLayer({ path: '/v3/keys/claim', response: mockApiResponse, request: mockApiRequest }))),
   )
 })

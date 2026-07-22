@@ -103,6 +103,6 @@ describe('post-keys-quert-v3', () => {
           },
         },
       })
-    }).pipe(Effect.provide(makeMockMatrixApiLayer({ response: mockApiResponse, request: mockApiRequest }))),
+    }).pipe(Effect.provide(makeMockMatrixApiLayer({ path: '/v3/keys/query', response: mockApiResponse, request: mockApiRequest }))),
   )
 })

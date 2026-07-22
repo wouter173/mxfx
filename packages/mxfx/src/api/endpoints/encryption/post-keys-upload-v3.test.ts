@@ -104,6 +104,6 @@ describe('post-keys-upload-v3', () => {
       }).pipe(Effect.andThen(api.execute))
 
       expect(result).toStrictEqual({ oneTimeKeyCounts: { signed_curve25519: 20 } })
-    }).pipe(Effect.provide(makeMockMatrixApiLayer({ response: mockApiResponse, request: mockApiRequest }))),
+    }).pipe(Effect.provide(makeMockMatrixApiLayer({ path: '/v3/keys/upload', response: mockApiResponse, request: mockApiRequest }))),
   )
 })

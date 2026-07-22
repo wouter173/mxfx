@@ -52,5 +52,5 @@ export const postKeysQueryV3 = Effect.fn(function* (options: (typeof optionsSche
     Effect.andThen(body => HttpBody.json(body)),
   )
 
-  return yield* makeEndpoint('POST', { auth: true, schema, body })`'/v3/keys/query'`
+  return yield* makeEndpoint('POST', { auth: true, schema, body })`/v3/keys/query`
 })
