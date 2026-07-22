@@ -74,8 +74,8 @@ const mockApiRequest = {
   timeout: 10000,
 }
 
-describe('post-keys-claim-v3', () => {
-  it.effect('claims a one-time key', () =>
+describe('post-keys-quert-v3', () => {
+  it.effect('query a user', () =>
     Effect.gen(function* () {
       const api = yield* MatrixApi
 
