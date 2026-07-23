@@ -38,6 +38,11 @@ const optionsSchema = Schema.Union([
       }),
     ]),
   }),
+  Schema.Struct({
+    ...commonOptionsSchema.fields,
+    eventType: Schema.String,
+    content: Schema.String,
+  }),
 ])
 
 /**
@@ -52,13 +57,12 @@ const optionsSchema = Schema.Union([
  *
  * @see https://spec.matrix.org/v1.17/client-server-api/#put_matrixclientv3roomsroomidsendeventtypetxnid
  */
-export const putRoomsSendV3 = (options: typeof optionsSchema.Type) =>
-  Effect.gen(function* () {
-    const body = yield* Schema.encodeEffect(optionsSchema.pipe(encodeSnakeCaseSchema))(options).pipe(
-      Effect.andThen(({ content }) => HttpBody.json(content)),
-    )
+export const putRoomsSendV3 = Effect.fn(function* (options: typeof optionsSchema.Type) {
+  const body = yield* Schema.encodeEffect(optionsSchema.pipe(encodeSnakeCaseSchema))(options).pipe(
+    Effect.andThen(({ content }) => HttpBody.json(content)),
+  )
 
-    const transactionId = options.transactionId ? options.transactionId : yield* Random.nextIntBetween(1, 10000000) // TODO: used be uuidv4 but was removed from random module into crypto, but haven't bothered to check how possible it is to DI anything here bc crypto gotta be injected
+  const transactionId = options.transactionId ? options.transactionId : yield* Random.nextIntBetween(1, 10000000) // TODO: used be uuidv4 but was removed from random module into crypto, but haven't bothered to check how possible it is to DI anything here bc crypto gotta be injected
 
-    return yield* makeEndpoint('PUT', { auth: true, schema, body })`/v3/rooms/${options.roomId}/send/${options.eventType}/${transactionId}`
-  })
+  return yield* makeEndpoint('PUT', { auth: true, schema, body })`/v3/rooms/${options.roomId}/send/${options.eventType}/${transactionId}`
+})

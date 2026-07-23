@@ -11,26 +11,25 @@ describe('getSyncV3ResponseSchema', () => {
       const schema = getSyncV3ResponseSchema.pipe(encodeSnakeCaseSchema)
 
       const payload = {
+        next_batch: 's72595_4483_1934',
         account_data: {
           events: [{ type: 'm.tag', content: { tags: { 'm.favourite': { order: 0.5 } } } }],
         },
-        device_lists: { changed: ['@alice:example.org'], left: [] },
-        device_one_time_keys_count: { signed_curve25519: 42 },
-        next_batch: 's72595_4483_1934',
         presence: {
           events: [{ type: 'm.presence', sender: '@alice:example.org', content: { presence: 'online' } }],
         },
+
+        device_lists: { changed: ['@alice:example.org'], left: [] },
+        device_unused_fallback_key_types: ['signed_curve25519'],
+        device_one_time_keys_count: { signed_curve25519: 42 },
+        to_device: { events: [{ type: 'm.room_key', sender: '@alice:example.org', content: { algorithm: 'm.megolm.v1.aes-sha2' } }] },
+
         rooms: {
           invite: {
             '!inviteroom:example.org': {
               invite_state: {
                 events: [
-                  {
-                    type: 'm.room.member',
-                    content: { membership: 'invite' },
-                    sender: '@alice:example.org',
-                    state_key: '@bob:example.org',
-                  },
+                  { type: 'm.room.member', content: { membership: 'invite' }, sender: '@alice:example.org', state_key: '@bob:example.org' },
                 ],
               },
             },
@@ -38,9 +37,7 @@ describe('getSyncV3ResponseSchema', () => {
           join: {
             '!joinedroom:example.org': {
               account_data: { events: [{ type: 'm.fully_read', content: { event_id: '$e1' } }] },
-              ephemeral: {
-                events: [{ type: 'm.typing', content: { user_ids: ['@alice:example.org'] } }],
-              },
+              ephemeral: { events: [{ type: 'm.typing', content: { user_ids: ['@alice:example.org'] } }] },
               state: {
                 events: [
                   {
@@ -176,19 +173,13 @@ describe('getSyncV3ResponseSchema', () => {
             },
           },
         },
-        to_device: {
-          events: [
-            {
-              type: 'm.room_key',
-              sender: '@alice:example.org',
-              content: { algorithm: 'm.megolm.v1.aes-sha2' },
-            },
-          ],
-        },
       }
 
       const decoded = yield* Schema.decodeUnknownEffect(schema)(payload)
 
+      expect(decoded.deviceLists).toStrictEqual({ changed: ['@alice:example.org'], left: [] })
+      expect(decoded.deviceUnusedFallbackKeyTypes).toStrictEqual(['signed_curve25519'])
+      expect(decoded.deviceOneTimeKeysCount).toStrictEqual({ signed_curve25519: 42 })
       expect(decoded.nextBatch).toBe('s72595_4483_1934')
       expect(decoded.rooms?.join?.[yield* RoomId.make('!joinedroom:example.org')]?.timeline?.events?.[0]).toMatchObject({
         eventId: '$msg1',

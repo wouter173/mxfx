@@ -3,7 +3,7 @@ import { Schema } from 'effect'
 import { RoomId, UserId } from '../branded/index.ts'
 
 export const roomEventFilterSchema = Schema.Struct({
-  limit: Schema.optional(Schema.Number.check(Schema.isGreaterThanOrEqualTo(0))), // The maximum number of events to return, must be an integer greater than 0. Servers should apply a default value, and impose a maximum value to avoid resource exhaustion.
+  limit: Schema.optional(Schema.Number.check(Schema.isGreaterThan(0))), // The maximum number of events to return, must be an integer greater than 0. Servers should apply a default value, and impose a maximum value to avoid resource exhaustion.
 
   containsUrl: Schema.optional(Schema.Boolean), // If true, includes only events with a url key in their content. If false, excludes those events. If omitted, url key is not considered for filtering.
   includeRedundantMembers: Schema.optional(Schema.Boolean), //  If true, sends all membership events for all events, even if they have already been sent to the client. Does not apply unless lazy_load_members is true. See Lazy-loading room members for more information. Defaults to false.
@@ -51,4 +51,13 @@ export const filterSchema = Schema.Struct({
   presence: Schema.optional(eventFilterSchema), // The presence updates to include.
   room: Schema.optional(roomFilterSchema), // Filters to be applied to room data.
 })
+
 export type Filter = typeof filterSchema.Type
+
+export function make(filter: Filter) {
+  return Schema.decodeSync(filterSchema)(filter)
+}
+
+export function makeEffect(filter: Filter) {
+  return Schema.decodeEffect(filterSchema)(filter)
+}

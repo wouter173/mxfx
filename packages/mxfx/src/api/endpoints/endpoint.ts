@@ -3,7 +3,7 @@ import { HttpBody, HttpClientRequest, HttpClientResponse, UrlParams } from 'effe
 
 import { encodeSnakeCaseSchema } from '../schema/encode-case.ts'
 
-export type MatrixEndpoint<S extends Schema.Top> = {
+export type MatrixEndpoint<S extends Schema.Top = Schema.Top> = {
   path: typeof pathBrandSchema.Type
   auth: boolean
   params?: UrlParams.Input

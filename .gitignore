@@ -1,6 +1,16 @@
-SCHEMA.md
-
+# Generated build artifacts
 dist
+**/*.tsbuildinfo
+
+# Generated dependencies
 node_modules
+
+# Environment specific files
 .env
-db.sqlite
+*.sqlite*
+
+# Apple specific files
+.DS_Store
+
+# scratchpad
+**/scratchpad/**/*

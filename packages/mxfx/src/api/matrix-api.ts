@@ -15,6 +15,14 @@ const make = Effect.gen(function* () {
         const request = yield* makeHttpRequest(endpoint)
         return yield* client.execute(request).pipe(Effect.andThen(parseHttpResponse(endpoint)))
       }),
+    executeRaw: <S extends Schema.Top>(endpoint: MatrixEndpoint<S>) =>
+      Effect.gen(function* () {
+        const client = endpoint.auth ? authHttpClient : apiHttpClient
+        const request = yield* makeHttpRequest(endpoint)
+        const response = yield* client.execute(request)
+
+        return yield* response.text
+      }),
   }
 })
 
