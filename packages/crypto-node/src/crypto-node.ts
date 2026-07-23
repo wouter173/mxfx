@@ -2,15 +2,14 @@ import * as MatrixCryptoNode from '@matrix-org/matrix-sdk-crypto-nodejs'
 import { Effect, Layer, Redacted } from 'effect'
 import { MatrixApi, RoomId } from 'mxfx'
 
-import { Crypto, CryptoError, type Machine, type CryptoShape } from './crypto.ts'
+import { Crypto, CryptoError, type Machine, type CryptoShape, type MachineOptions } from './crypto.ts'
 
 type SyncFrame = typeof MatrixApi.endpoints.getSyncV3ResponseSchema.Type
 
 export const makeLayer: Effect.Effect<CryptoShape, never, MatrixApi.MatrixApi> = Effect.gen(function* () {
   const api = yield* MatrixApi.MatrixApi
 
-  yield* Effect.log('create layer cryptonode')
-  const makeMachine = Effect.fn(function* ({ userId, deviceId, storage }: Parameters<CryptoShape['makeMachine']>[0]) {
+  const acquireMachine = Effect.fn(function* ({ userId, deviceId, storage }: MachineOptions) {
     const olmMachine = yield* Effect.tryPromise({
       try: () =>
         MatrixCryptoNode.OlmMachine.initialize(
@@ -26,6 +25,17 @@ export const makeLayer: Effect.Effect<CryptoShape, never, MatrixApi.MatrixApi> =
     return { _olmMachine: olmMachine }
   })
 
+  const closeMachine = (machine: Machine) =>
+    Effect.try({
+      try: () => machine._olmMachine.close(),
+      catch: e => new CryptoError({ cause: e }),
+    })
+
+  const makeMachine = (options: MachineOptions) =>
+    Effect.acquireRelease(acquireMachine(options), machine =>
+      closeMachine(machine).pipe(Effect.catch(error => Effect.logError('Failed to close OlmMachine', error))),
+    )
+
   const receiveSyncChanges = Effect.fn(function* (machine: Machine, sync: SyncFrame) {
     //TODO: all this can fail, probably
     const toDeviceEvents = JSON.stringify(sync.toDevice?.events ?? [])
@@ -37,14 +47,12 @@ export const makeLayer: Effect.Effect<CryptoShape, never, MatrixApi.MatrixApi> =
     const oneTimeKeyCounts = sync.deviceOneTimeKeysCount ?? {}
     const unusedFallbackKeys = [...(sync.deviceUnusedFallbackKeyTypes ?? [])] //TODO: this copy a lil crazy but otherwise it readonly
 
-    yield* Effect.log(toDeviceEvents, changedDevices, oneTimeKeyCounts, unusedFallbackKeys)
-
-    const x = yield* Effect.tryPromise({
+    const toDevice = yield* Effect.tryPromise({
       try: () => machine._olmMachine.receiveSyncChanges(toDeviceEvents, changedDevices, oneTimeKeyCounts, unusedFallbackKeys),
       catch: cause => new CryptoError({ cause }),
     })
 
-    yield* Effect.log(x)
+    return toDevice
   })
 
   const getOutgoingRequests = Effect.fn(function* (machine: Machine) {
@@ -124,13 +132,16 @@ export const makeLayer: Effect.Effect<CryptoShape, never, MatrixApi.MatrixApi> =
     )
   })
 
-  const closeMachine = (machine: Machine) =>
-    Effect.try({
-      try: () => machine._olmMachine.close(),
-      catch: e => new CryptoError({ cause: e }),
+  const decryptRoomEvent = Effect.fn(function* (machine: Machine, event: string, roomId: RoomId) {
+    const decryptedEvent = yield* Effect.tryPromise({
+      try: () => machine._olmMachine.decryptRoomEvent(event, new MatrixCryptoNode.RoomId(roomId)),
+      catch: cause => new CryptoError({ cause }),
     })
 
-  return { makeMachine, receiveSyncChanges, getOutgoingRequests, sendOutgoingRequests, markRequestAsSent, closeMachine }
+    return decryptedEvent
+  })
+
+  return { makeMachine, receiveSyncChanges, getOutgoingRequests, sendOutgoingRequests, markRequestAsSent, decryptRoomEvent }
 })
 
 export const layer = Layer.effect(Crypto, makeLayer)

@@ -22,7 +22,10 @@ export const makeConfig = (opts: MakeOpts) =>
     const request = yield* makeHttpRequest(endpoint)
     const res = yield* baseHttpClient.execute(request).pipe(Effect.andThen(parseHttpResponse(endpoint)))
 
-    return { serverName, baseUrl: res['m.homeserver'].baseUrl }
+    return {
+      serverName,
+      baseUrl: res['m.homeserver'].baseUrl.replace(/\/+$/, ''), // remove trailing slash if exists
+    }
   })
 
 type MakeOpts = {

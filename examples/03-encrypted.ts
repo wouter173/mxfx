@@ -1,15 +1,15 @@
 import { NodeHttpClient, NodeRuntime } from '@effect/platform-node'
 import { Crypto, CryptoNode } from '@mxfx/crypto-node'
-import { Effect, Layer, Option, PubSub, Duration, Stream, Cause, Config, Record, References } from 'effect'
-import { Filter, Kv, MatrixApi, MatrixAuth, MatrixConfig } from 'mxfx'
+import { Effect, Layer, Option, PubSub, Duration, Stream, Cause, Config, Record, References, Redacted, Schema } from 'effect'
+import { Filter, Kv, MatrixApi, MatrixAuth, MatrixConfig, Event } from 'mxfx'
 import { endpoints } from 'mxfx/api'
 
 const emptyFilter = Filter.make({
   room: {
-    timeline: { limit: 10, lazyLoadMembers: true },
-    state: { lazyLoadMembers: true },
-    accountData: { lazyLoadMembers: true, notTypes: ['*'] },
-    ephemeral: { lazyLoadMembers: true, notTypes: ['*'] },
+    timeline: { limit: 10, lazyLoadMembers: false },
+    state: { lazyLoadMembers: false },
+    accountData: { lazyLoadMembers: false, notTypes: ['*'] },
+    ephemeral: { lazyLoadMembers: false, notTypes: ['*'] },
   },
   presence: { notTypes: ['*'] },
   accountData: { notTypes: ['*'] },
@@ -24,7 +24,13 @@ const syncLoop = Effect.gen(function* () {
 
   const { userId, deviceId } = yield* endpoints.getAccountWhoami().pipe(Effect.andThen(api.execute))
 
-  const machine = yield* crypto.makeMachine({ userId, deviceId: deviceId ?? 'TESTING', storage: { type: 'memory' } })
+  if (!deviceId) return yield* Effect.die('No deviceId')
+
+  const machine = yield* crypto.makeMachine({
+    userId,
+    deviceId: deviceId,
+    storage: { type: 'sqlite', passphrase: Redacted.make('passphrase'), path: './03-encrypted-db' },
+  })
 
   const syncHub = yield* PubSub.unbounded<SyncFrame>()
   const syncStream = Stream.fromPubSub(syncHub)
@@ -44,8 +50,8 @@ const syncLoop = Effect.gen(function* () {
           Effect.andThen(api.execute),
           Effect.tap(sync => crypto.receiveSyncChanges(machine, sync)),
           Effect.tap(sync => PubSub.publish(syncHub, sync)),
-          Effect.tap(sync => kv.set('syncToken', sync.nextBatch)),
           Effect.tap(() => crypto.sendOutgoingRequests(machine)),
+          Effect.tap(sync => kv.set('syncToken', sync.nextBatch)),
         ),
     ),
   )
@@ -55,7 +61,7 @@ const syncLoop = Effect.gen(function* () {
     Effect.forkDetach(),
   )
 
-  return { eventStream: syncStream }
+  return { eventStream: syncStream, machine }
 })
 
 const handleMessages = Effect.fn(function* (f: SyncFrame) {
@@ -80,6 +86,36 @@ const handleMessages = Effect.fn(function* (f: SyncFrame) {
   )
 })
 
+const handleEncryptedEvents = Effect.fn(function* (f: SyncFrame, machine: Crypto.Machine) {
+  const crypto = yield* Crypto.Crypto
+
+  if (!f.rooms?.join) return
+  const joinedRooms = f.rooms.join
+  const roomIds = Record.keys(f.rooms?.join)
+  yield* Effect.forEach(roomIds, roomId =>
+    Effect.gen(function* () {
+      const room = joinedRooms[roomId]
+
+      if (!room?.timeline?.events) return
+      const events = room.timeline.events
+
+      yield* Effect.forEach(events, event =>
+        Effect.gen(function* () {
+          if (event.type !== 'm.room.encrypted') return
+
+          const wireEvent = yield* Schema.encodeUnknownEffect(
+            Event.roomEventWithoutRoomId.pipe(MatrixApi.EncodeCase.encodeSnakeCaseSchema),
+          )(event)
+
+          const decrypted = yield* crypto.decryptRoomEvent(machine, JSON.stringify(wireEvent), roomId)
+
+          yield* Effect.log('new encrypted event!', { content: event.content, decrypted: decrypted.event })
+        }),
+      )
+    }),
+  )
+})
+
 const handleInvites = Effect.fn(function* (f: SyncFrame) {
   const api = yield* MatrixApi.MatrixApi
 
@@ -91,7 +127,7 @@ const handleInvites = Effect.fn(function* (f: SyncFrame) {
 })
 
 const program = Effect.gen(function* () {
-  const { eventStream } = yield* syncLoop
+  const { eventStream, machine } = yield* syncLoop
 
   yield* eventStream.pipe(
     Stream.onFirst(() => Effect.log('Client Started')),
@@ -102,6 +138,7 @@ const program = Effect.gen(function* () {
     [
       eventStream.pipe(Stream.runForEach(handleInvites)), //
       eventStream.pipe(Stream.runForEach(handleMessages)),
+      eventStream.pipe(Stream.runForEach(sync => handleEncryptedEvents(sync, machine))),
     ],
     { concurrency: 'unbounded' },
   )
@@ -115,4 +152,4 @@ const matrixLayer = CryptoNode.layer.pipe(
   Layer.provideMerge(Layer.succeed(References.MinimumLogLevel, 'Debug')),
 )
 
-NodeRuntime.runMain(program.pipe(Effect.provide(matrixLayer)))
+NodeRuntime.runMain(program.pipe(Effect.provide(matrixLayer), Effect.scoped))
